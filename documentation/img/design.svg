@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 3508 2481" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g transform="matrix(0.683784,0,0,0.683784,3.06968,-284.716)">
+        <g>
+            <path d="M637.716,564.277C637.716,527.623 607.958,497.864 571.304,497.864L144.666,497.864C108.012,497.864 78.254,527.623 78.254,564.277L78.254,697.102C78.254,733.756 108.012,763.514 144.666,763.514L571.304,763.514C607.958,763.514 637.716,733.756 637.716,697.102L637.716,564.277Z" style="fill:white;"/>
+            <clipPath id="_clip1">
+                <path d="M637.716,564.277C637.716,527.623 607.958,497.864 571.304,497.864L144.666,497.864C108.012,497.864 78.254,527.623 78.254,564.277L78.254,697.102C78.254,733.756 108.012,763.514 144.666,763.514L571.304,763.514C607.958,763.514 637.716,733.756 637.716,697.102L637.716,564.277Z"/>
+            </clipPath>
+            <g clip-path="url(#_clip1)">
+                <g transform="matrix(1.46245,0,0,1.46245,50.675,-261.206)">
+                    <text x="104.174px" y="630.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">K<tspan x="138.024px " y="630.689px ">a</tspan>mer<tspan x="256.274px 283.774px " y="630.689px 630.689px ">a2</tspan></text>
+                </g>
+            </g>
+            <path d="M637.716,564.277C637.716,527.623 607.958,497.864 571.304,497.864L144.666,497.864C108.012,497.864 78.254,527.623 78.254,564.277L78.254,697.102C78.254,733.756 108.012,763.514 144.666,763.514L571.304,763.514C607.958,763.514 637.716,733.756 637.716,697.102L637.716,564.277Z" style="fill:none;stroke:black;stroke-width:3.05px;"/>
+        </g>
+    </g>
+    <g transform="matrix(0.683784,0,0,0.683784,3015.24,55.9144)">
+        <g>
+            <path d="M637.716,564.277C637.716,527.623 607.958,497.864 571.304,497.864L144.666,497.864C108.012,497.864 78.254,527.623 78.254,564.277L78.254,697.102C78.254,733.756 108.012,763.514 144.666,763.514L571.304,763.514C607.958,763.514 637.716,733.756 637.716,697.102L637.716,564.277Z" style="fill:white;"/>
+            <clipPath id="_clip2">
+                <path d="M637.716,564.277C637.716,527.623 607.958,497.864 571.304,497.864L144.666,497.864C108.012,497.864 78.254,527.623 78.254,564.277L78.254,697.102C78.254,733.756 108.012,763.514 144.666,763.514L571.304,763.514C607.958,763.514 637.716,733.756 637.716,697.102L637.716,564.277Z"/>
+            </clipPath>
+            <g clip-path="url(#_clip2)">
+                <g transform="matrix(1.46245,0,0,1.46245,50.675,-261.206)">
+                    <text x="164.999px" y="630.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">GUI</text>
+                </g>
+            </g>
+            <path d="M637.716,564.277C637.716,527.623 607.958,497.864 571.304,497.864L144.666,497.864C108.012,497.864 78.254,527.623 78.254,564.277L78.254,697.102C78.254,733.756 108.012,763.514 144.666,763.514L571.304,763.514C607.958,763.514 637.716,733.756 637.716,697.102L637.716,564.277Z" style="fill:none;stroke:black;stroke-width:3.05px;"/>
+        </g>
+    </g>
+    <g transform="matrix(0.683784,0,0,0.683784,1023.46,-284.716)">
+        <g>
+            <rect x="78.254" y="497.864" width="559.462" height="265.65" style="fill:white;"/>
+            <clipPath id="_clip3">
+                <rect x="78.254" y="497.864" width="559.462" height="265.65"/>
+            </clipPath>
+            <g clip-path="url(#_clip3)">
+                <g transform="matrix(1.46245,0,0,1.46245,52.0056,-309.899)">
+                    <text x="54.099px" y="630.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">C<tspan x="87.999px 115.499px " y="630.689px 630.689px ">am</tspan>er<tspan x="206.249px 233.749px 246.249px 274.649px 291.649px 318.649px " y="630.689px 630.689px 630.689px 630.689px 630.689px 630.689px ">a Stat</tspan></text>
+                    <text x="335.649px" y="630.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">e</text>
+                    <text x="116.874px" y="680.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">Monitor</text>
+                </g>
+            </g>
+            <rect x="78.254" y="497.864" width="559.462" height="265.65" style="fill:none;stroke:black;stroke-width:3.05px;"/>
+        </g>
+    </g>
+    <g transform="matrix(0.683784,0,0,0.683784,1023.46,-284.716)">
+        <g>
+            <rect x="78.254" y="497.864" width="559.462" height="265.65" style="fill:white;"/>
+            <clipPath id="_clip4">
+                <rect x="78.254" y="497.864" width="559.462" height="265.65"/>
+            </clipPath>
+            <g clip-path="url(#_clip4)">
+                <g transform="matrix(1.46245,0,0,1.46245,52.0056,-309.899)">
+                    <text x="54.099px" y="630.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">C<tspan x="87.999px 115.499px " y="630.689px 630.689px ">am</tspan>er<tspan x="206.249px 233.749px 246.249px 274.649px 291.649px 318.649px " y="630.689px 630.689px 630.689px 630.689px 630.689px 630.689px ">a Stat</tspan></text>
+                    <text x="335.649px" y="630.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">e</text>
+                    <text x="116.874px" y="680.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">Monitor</text>
+                </g>
+            </g>
+            <rect x="78.254" y="497.864" width="559.462" height="265.65" style="fill:none;stroke:black;stroke-width:3.05px;"/>
+        </g>
+    </g>
+    <g transform="matrix(0.683784,0,0,0.683784,1024.17,404.303)">
+        <g>
+            <rect x="78.254" y="497.864" width="559.462" height="265.65" style="fill:white;"/>
+            <clipPath id="_clip5">
+                <rect x="78.254" y="497.864" width="559.462" height="265.65"/>
+            </clipPath>
+            <g clip-path="url(#_clip5)">
+                <g transform="matrix(1.46245,0,0,1.46245,52.0056,-309.899)">
+                    <text x="54.099px" y="630.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">C<tspan x="87.999px 115.499px " y="630.689px 630.689px ">am</tspan>er<tspan x="206.249px 233.749px 246.249px 274.649px 291.649px 318.649px " y="630.689px 630.689px 630.689px 630.689px 630.689px 630.689px ">a Stat</tspan></text>
+                    <text x="335.649px" y="630.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">e</text>
+                    <text x="116.874px" y="680.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">Monitor</text>
+                </g>
+            </g>
+            <rect x="78.254" y="497.864" width="559.462" height="265.65" style="fill:none;stroke:black;stroke-width:3.05px;"/>
+        </g>
+    </g>
+    <g transform="matrix(0.683784,0,0,0.683784,1967.05,55.9144)">
+        <g>
+            <rect x="78.254" y="497.864" width="559.462" height="265.65" style="fill:white;"/>
+            <clipPath id="_clip6">
+                <rect x="78.254" y="497.864" width="559.462" height="265.65"/>
+            </clipPath>
+            <g clip-path="url(#_clip6)">
+                <g transform="matrix(1.46245,0,0,1.46245,52.0056,-309.899)">
+                    <text x="54.099px" y="630.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">C<tspan x="87.999px 115.499px " y="630.689px 630.689px ">am</tspan>er<tspan x="206.249px 233.749px 246.249px 274.649px 291.649px 318.649px " y="630.689px 630.689px 630.689px 630.689px 630.689px 630.689px ">a Stat</tspan></text>
+                    <text x="335.649px" y="630.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">e</text>
+                    <text x="116.874px" y="680.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">Monitor</text>
+                </g>
+            </g>
+            <rect x="78.254" y="497.864" width="559.462" height="265.65" style="fill:none;stroke:black;stroke-width:3.05px;"/>
+        </g>
+    </g>
+    <g transform="matrix(0.683784,0,0,0.683784,3.06968,404.303)">
+        <g>
+            <path d="M637.716,564.277C637.716,527.623 607.958,497.864 571.304,497.864L144.666,497.864C108.012,497.864 78.254,527.623 78.254,564.277L78.254,697.102C78.254,733.756 108.012,763.514 144.666,763.514L571.304,763.514C607.958,763.514 637.716,733.756 637.716,697.102L637.716,564.277Z" style="fill:white;"/>
+            <clipPath id="_clip7">
+                <path d="M637.716,564.277C637.716,527.623 607.958,497.864 571.304,497.864L144.666,497.864C108.012,497.864 78.254,527.623 78.254,564.277L78.254,697.102C78.254,733.756 108.012,763.514 144.666,763.514L571.304,763.514C607.958,763.514 637.716,733.756 637.716,697.102L637.716,564.277Z"/>
+            </clipPath>
+            <g clip-path="url(#_clip7)">
+                <g transform="matrix(1.46245,0,0,1.46245,50.675,-261.206)">
+                    <text x="104.174px" y="630.689px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:50px;">K<tspan x="138.024px " y="630.689px ">a</tspan>mer<tspan x="256.274px 283.774px " y="630.689px 630.689px ">a1</tspan></text>
+                </g>
+            </g>
+            <path d="M637.716,564.277C637.716,527.623 607.958,497.864 571.304,497.864L144.666,497.864C108.012,497.864 78.254,527.623 78.254,564.277L78.254,697.102C78.254,733.756 108.012,763.514 144.666,763.514L571.304,763.514C607.958,763.514 637.716,733.756 637.716,697.102L637.716,564.277Z" style="fill:none;stroke:black;stroke-width:3.05px;"/>
+        </g>
+    </g>
+    <g transform="matrix(0.624159,0,0,0.606205,64.1667,279.25)">
+        <path d="M680.364,838.633L680.364,856.83L655.11,830.828L680.364,804.825L680.364,823.022L1521.06,823.022L1521.06,838.633L680.364,838.633Z"/>
+    </g>
+    <g transform="matrix(-0.624159,0,0,-0.606205,1422.44,1389.04)">
+        <path d="M680.364,838.633L680.364,856.83L655.11,830.828L680.364,804.825L680.364,823.022L1521.06,823.022L1521.06,838.633L680.364,838.633Z"/>
+    </g>
+    <g transform="matrix(-1.11854,-0.721161,0.328486,-0.509492,2907.72,2449.27)">
+        <path d="M785.807,1249.87L789.582,1262.72L773.924,1257.54L779.319,1227.78L782.568,1238.84L1076.81,823.022L1521.06,823.022L1521.06,838.633L1077.92,838.633L785.807,1249.87Z"/>
+    </g>
+    <g transform="matrix(-0.20044,0,0,-0.606205,1788.28,650.191)">
+        <path d="M733.752,838.633L733.752,856.83L655.11,830.828L733.752,804.825L733.752,823.022L1521.06,823.022L1521.06,838.633L733.752,838.633Z"/>
+    </g>
+    <g transform="matrix(-0.20044,0,0,-0.606205,2724.75,990.822)">
+        <path d="M733.752,838.633L733.752,856.83L655.11,830.828L733.752,804.825L733.752,823.022L1521.06,823.022L1521.06,838.633L733.752,838.633Z"/>
+    </g>
+    <g transform="matrix(-0.20044,0,0,-0.606205,3182.62,990.822)">
+        <path d="M733.752,838.633L733.752,856.83L655.11,830.828L733.752,804.825L733.752,823.022L1521.06,823.022L1521.06,838.633L733.752,838.633Z"/>
+    </g>
+    <g transform="matrix(-0.141733,-0.141733,0.428652,-0.428652,1757.27,804.692)">
+        <path d="M733.752,838.633L733.752,856.83L655.11,830.828L733.752,804.825L733.752,823.022L1521.06,823.022L1521.06,838.633L733.752,838.633Z"/>
+    </g>
+    <g transform="matrix(-0.141733,0.141733,0.428652,0.428652,1757.27,169.669)">
+        <path d="M733.752,838.633L733.752,856.83L655.11,830.828L733.752,804.825L733.752,823.022L1521.06,823.022L1521.06,838.633L733.752,838.633Z"/>
+    </g>
+    <g transform="matrix(-0.20044,0,0,-0.606205,1788.28,1343.86)">
+        <path d="M733.752,838.633L733.752,856.83L655.11,830.828L733.752,804.825L733.752,823.022L1521.06,823.022L1521.06,838.633L733.752,838.633Z"/>
+    </g>
+    <g transform="matrix(-1.19469,-1.09672,0.409951,-0.44657,2962.95,2262.92)">
+        <path d="M664.829,838.633L664.829,856.83L655.11,830.828L664.829,804.825L664.829,823.022L1521.06,823.022L1521.06,838.633L664.829,838.633Z"/>
+    </g>
+    <g transform="matrix(1.19469,1.09672,-0.409951,0.44657,1008.64,-835.847)">
+        <path d="M664.829,838.633L664.829,856.83L655.11,830.828L664.829,804.825L664.829,823.022L1521.06,823.022L1521.06,838.633L664.829,838.633Z"/>
+    </g>
+    <g transform="matrix(0.559562,-0.700923,0.473755,0.378208,1924.05,1351.79)">
+        <path d="M672.685,838.633L672.685,856.83L655.11,830.828L672.685,804.825L672.685,823.022L1521.06,823.022L1521.06,838.633L672.685,838.633Z"/>
+    </g>
+    <g transform="matrix(1,0,0,1,28.5407,-752.988)">
+        <g transform="matrix(1.3492,0,0,1.3492,-890.974,-308.885)">
+            <circle cx="1960.35" cy="895.648" r="90.824" style="fill:white;stroke:black;stroke-width:1.54px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-160.165,18.0541)">
+            <text x="1850.99px" y="895.648px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:58.333px;">S<tspan x="1883.77px " y="895.648px ">y</tspan>nc</text>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,1,28.5407,-752.988)">
+        <g transform="matrix(1.3492,0,0,1.3492,-890.974,384.787)">
+            <circle cx="1960.35" cy="895.648" r="90.824" style="fill:white;stroke:black;stroke-width:1.54px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-160.165,711.726)">
+            <text x="1850.99px" y="895.648px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:58.333px;">S<tspan x="1883.77px " y="895.648px ">y</tspan>nc</text>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,1,827.175,-288.718)">
+        <g transform="matrix(1.3492,0,0,1.3492,-890.974,384.787)">
+            <circle cx="1960.35" cy="895.648" r="90.824" style="fill:white;stroke:black;stroke-width:1.54px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-160.165,689.186)">
+            <text x="1837.51px" y="895.648px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:58.333px;">E<tspan x="1872.39px " y="895.648px ">v</tspan>ent</text>
+            <text x="1861.51px" y="953.982px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:58.333px;">Bo<tspan x="1934.26px " y="953.982px ">x</tspan></text>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,1,984.471,-1106.03)">
+        <g transform="matrix(1.3492,0,0,1.3492,-890.974,384.787)">
+            <circle cx="1960.35" cy="895.648" r="90.824" style="fill:white;stroke:black;stroke-width:1.54px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-160.165,711.726)">
+            <text x="1850.99px" y="895.648px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:58.333px;">S<tspan x="1883.77px " y="895.648px ">y</tspan>nc</text>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,1,0,-80.9322)">
+        <path d="M1466.07,1056.78L1961.69,1376.32L2423.51,1377.46L2423.51,1385.41L1957.81,1385.08L1460.93,1064.72L1456.4,1071.72L1450.7,1051.43L1470.1,1050.56L1466.07,1056.78Z"/>
+    </g>
+    <g transform="matrix(1,0,0,1,122.977,-44.4569)">
+        <text x="2228.49px" y="1521.29px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:41.667px;">modeE<tspan x="2366.24px " y="1521.29px ">v</tspan>ent(mode)</text>
+        <text x="2228.49px" y="1562.96px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:41.667px;">syncE<tspan x="2337.86px " y="1562.96px ">v</tspan>ent(tar<tspan x="2486.82px 2513.16px " y="1562.96px 1562.96px ">ge</tspan>t,mode)</text>
+    </g>
+    <g transform="matrix(1,0,0,1,710.463,-585.396)">
+        <text x="2228.49px" y="1521.29px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:41.667px;">actionE<tspan x="2371.66px " y="1521.29px ">v</tspan>ent</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-12.7062,-3.60154)">
+        <text x="1140.27px" y="983.804px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:41.667px;">setAsync()</text>
+        <text x="1140.27px" y="1025.47px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:41.667px;">changeMode()</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-12.7062,-697.968)">
+        <text x="1140.27px" y="983.804px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:41.667px;">setAsync()</text>
+        <text x="1140.27px" y="1025.47px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:41.667px;">changeMode()</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-6.17576,22.6127)">
+        <text x="547.835px" y="734.622px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:41.667px;">C<tspan x="576.335px " y="734.622px ">o</tspan>nnect,<tspan x="718.252px 728.668px " y="734.622px 734.622px "> I</tspan>nstructions</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-6.17576,196.778)">
+        <text x="547.835px" y="734.622px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:41.667px;">Images,<tspan x="697.918px 708.335px " y="734.622px 734.622px "> I</tspan>nforma<tspan x="858.002px " y="734.622px ">t</tspan>ion</text>
+    </g>
+    <g transform="matrix(0.624159,0,0,0.606205,64.1667,-402.111)">
+        <path d="M680.364,838.633L680.364,856.83L655.11,830.828L680.364,804.825L680.364,823.022L1521.06,823.022L1521.06,838.633L680.364,838.633Z"/>
+    </g>
+    <g transform="matrix(-0.624159,0,0,-0.606205,1422.44,707.677)">
+        <path d="M680.364,838.633L680.364,856.83L655.11,830.828L680.364,804.825L680.364,823.022L1521.06,823.022L1521.06,838.633L680.364,838.633Z"/>
+    </g>
+    <g transform="matrix(1,0,0,1,-6.17576,-658.748)">
+        <text x="547.835px" y="734.622px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:41.667px;">C<tspan x="576.335px " y="734.622px ">o</tspan>nnect,<tspan x="718.252px 728.668px " y="734.622px 734.622px "> I</tspan>nstructions</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-6.17576,-484.583)">
+        <text x="547.835px" y="734.622px" style="font-family:'AvenirNext-DemiBold', 'Avenir Next', sans-serif;font-weight:600;font-size:41.667px;">Images,<tspan x="697.918px 708.335px " y="734.622px 734.622px "> I</tspan>nforma<tspan x="858.002px " y="734.622px ">t</tspan>ion</text>
+    </g>
+</svg>
