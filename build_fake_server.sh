@@ -4,7 +4,7 @@
 # 1. Be in edaf55-camera-project folder
 # 2. Type ./build_server.sh
 # Will compile all C-files and create a runnable Server-file in bin_c
-# Then it runes the Server-file
+# Then it runs the Server-file
 
 
 cd src_c/main

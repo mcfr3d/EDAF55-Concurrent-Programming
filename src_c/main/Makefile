@@ -44,10 +44,10 @@ camera.o: camera.c camera.h fakecapture.h
 #	-rm http_server motion_server
 
 clean:
-    -rm simple_tcp_server.o camera.o
+	-rm simple_tcp_server.o camera.o
 
 distclean: clean
-    -rm simple_tcp_server
+	-rm simple_tcp_server
 
 .PHONY: all clean
 

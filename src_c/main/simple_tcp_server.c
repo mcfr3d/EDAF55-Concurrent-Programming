@@ -137,8 +137,8 @@ int main()
         perror("create_server_socket");
         return 1;
     }
-
-    for(int a = 0; a<10; a++) {
+    int a;
+    for(a = 0; a<10; a++) {
         int i = 0;
         int n = 247;
         camera* cam = camera_open();
