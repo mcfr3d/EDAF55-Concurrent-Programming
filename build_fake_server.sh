@@ -8,8 +8,8 @@
 
 
 cd src_c/main
-make -f Makefile
+make -f Makefile.fake
 {rm -rfv fake_server.dSYM} &>/dev/null
 cd ../..
-mv src_c/main/fake_server bin_c/Server
-./bin_c/Server
+mv src_c/main/fake_server bin_c/Fake_Server
+./bin_c/Fake_Server
