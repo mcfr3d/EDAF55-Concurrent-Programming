@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/ip.h>
 #include <string.h>
+#include "camera.h"
 
 static int bind_server_socket(int fd, int port);
 
@@ -55,9 +56,9 @@ static int bind_server_socket(int fd, int port){
 }
 
 /*
- * Serve one client: send a message and close the socket
+ * Serve one client: send image
  */
-static int do_serve(int fd, int pic)
+/*static int do_serve2(int fd, int pic)
 {
     int clientfd;
 
@@ -101,44 +102,30 @@ static int do_serve(int fd, int pic)
     }
      error:
         printf("Closing clientfd (%d)\n",clientfd);
+    return close(clientfd);
+}*/
 
-    /*int clientfd;
-    const char* msg = "Hello, socket!\n"
-                      "I am a text\n"
-                      "BYE.\n";
-    size_t len = strlen(msg);
-    
-    printf("simple_tcp_server: attempting accept on fd %d\n",fd);
+static int do_serve(int fd, camera* cam)
+{
+    int clientfd;
+
+    printf("Attempting accept on fd %d\n",fd);
     if((clientfd = accept(fd, NULL, NULL)) < 0) return -1;
-#ifdef INFO
-    printf("simple_tcp_server: writing msg (len=%lu) to clientfd (%d)\n",len,clientfd);
-#endif
-    
-#ifdef WRITE_LOOP
-    size_t written = 0;
-    do {
-        int res = write(clientfd, msg, len);
-        if (res < 0) {
-            perror("write to clientfd");
-            goto error;
-        }
-#ifdef INFO
-        printf("simple_tcp_server: write returned %d\n",res);
-#endif
-        written += res;
-    } while (written < len);
-#else
-    {
-        int res = write(clientfd, msg, len);
-        if (res < 0) {
-            perror("write to clientfd");
-            goto error;
-        }
-    }
-#endif
+    printf("Client connected.\n");
 
- error:
-    printf("simple_tcp_server: closing clientfd (%d)\n",clientfd);*/
+    frame *f = camera_get_frame(cam);
+    size_t size = get_frame_size(f);
+    byte *bytes = get_frame_bytes(f);
+
+    printf("Sending Picture Size\n");
+    write(clientfd, &size, sizeof(size));
+
+    printf("Sending picture.\n");
+    write(clientfd, bytes, size);
+
+    frame_free(f);
+     error:
+        printf("Closing clientfd (%d)\n",clientfd);
     return close(clientfd);
 }
 
@@ -150,14 +137,20 @@ int main()
         perror("create_server_socket");
         return 1;
     }
-    printf("Wating for clients to connect...\n");
-    int i = 0;
-    int n = 10;
-    do {
-        do_serve(fd, i);
-        i++;
+
+    for(int a = 0; a<10; a++) {
+        int i = 0;
+        int n = 247;
+        camera* cam = camera_open();
+        printf("Opening camera...\n");
+        do {
+            printf("Wating for clients to connect...\n");
+            do_serve(fd, cam);
+            i++;
+        }
+        while(i < n);
+        camera_close(cam);
     }
-    while(i < n);
 
 
     printf("Closing socket: %d\n", fd);

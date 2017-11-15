@@ -16,75 +16,88 @@ public class InputSocket extends Thread {
     private Monitor mon;
     private int disconnectCounter = 0;
 
-    public InputSocket() {
-        this(LOCAL_HOST, DEF_PORT);
-    }
-
-    public InputSocket(String serverHostName) {
-        this(serverHostName, DEF_PORT);
-    }
-
-    public InputSocket(int port) {
-        this(LOCAL_HOST, port);
-    }
-
-    public InputSocket(String serverHostName, int port) {
+    public InputSocket(String serverHostName, int port, Monitor mon) {
         this.serverHostName = serverHostName;
         this.port = port;
-        this.mon = null;
+        this.mon = mon;
     }
 
     public InputSocket(Monitor mon) {
-        this(LOCAL_HOST, DEF_PORT);
-        this.mon = mon;
+        this(LOCAL_HOST, DEF_PORT, mon);
     }
 
     @Override
     public void run() {
         while(!isInterrupted() && disconnectCounter < 500) {
+            System.out.println("Attemping to connect to host " + serverHostName + " on port " + port + ".");
+            Socket socket = null;
+            BufferedInputStream bis = null;
             try {
-                System.out.println("Attemping to connect to host " + serverHostName + " on port " + port + ".");
-                Socket socket = null;
-                InputStream in = null;
-                try {
-                    socket = new Socket(serverHostName, port);
-                    disconnectCounter = 0;
-                    in = socket.getInputStream();
-                } catch (UnknownHostException e) {
-                    System.err.println("Don't know about host: " + serverHostName);
-                    //System.exit(1);
-                }
+                socket = new Socket(serverHostName, port);
+                bis = new BufferedInputStream(socket.getInputStream());
+                disconnectCounter = 0;
+                System.out.println("Fetching image...");
+                fetchImage(bis);
 
-                byte[] sizeOfImageArray = new byte[4];
-                int readBytes = in.read(sizeOfImageArray);
-                if(readBytes < sizeOfImageArray.length) {
-                    System.err.println("Error: Only able to read " +readBytes + " bytes of the image size.");
-                }
+                bis.close();
+                socket.close();
+            } catch (UnknownHostException e) {
+                System.err.println("Don't know about host: " + serverHostName);
+                //System.exit(1);
+            } catch (IOException e) {
+                System.err.println("Couldn't connect.");
+                disconnectCounter++;
+            }
 
-                for(byte b = 0; b < 2; b++) {
-                    byte temp = sizeOfImageArray[b];
-                    int lastIndex = sizeOfImageArray.length-1-b;
-                    sizeOfImageArray[b] = sizeOfImageArray[lastIndex];
-                    sizeOfImageArray[lastIndex] = temp;
-                }
+            try {
+                sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
-                int sizeOfImage = ByteBuffer.wrap(sizeOfImageArray).asIntBuffer().get();
-                System.out.println("Size of image: " + sizeOfImage);
-                byte[] imageArray = new byte[sizeOfImage];
+        }
+        if(disconnectCounter > 10) System.out.println("Disconnecting...");
+    }
 
-                in.read(imageArray);
+    private void fetchImage(InputStream is) {
+        try {
 
+            byte[] sizeOfImageArray = new byte[4];
+            int readBytes = is.read(sizeOfImageArray);
+            if(readBytes < sizeOfImageArray.length) {
+                System.err.println("Error: Only able to read " +readBytes + " bytes of the image size.");
+                return;
+            }
+
+            for(byte b = 0; b < 2; b++) {
+                byte temp = sizeOfImageArray[b];
+                int lastIndex = sizeOfImageArray.length-1-b;
+                sizeOfImageArray[b] = sizeOfImageArray[lastIndex];
+                sizeOfImageArray[lastIndex] = temp;
+            }
+
+            int sizeOfImage = ByteBuffer.wrap(sizeOfImageArray).asIntBuffer().get();
+            System.out.println("Size of image: " + sizeOfImage);
+            if(sizeOfImage <= 0) {
+                disconnectCounter++;
+                return;
+            }
+            byte[] imageArray = new byte[sizeOfImage];
+            if(is.skip(4) == 4) {
+                is.read(imageArray);
                 if(mon != null) {
                     mon.parseImageBytes(imageArray);
                 }
-
-                socket.close();
-
-            } catch (IOException e) {
-                System.err.println("Couldn't get I/O");
-                disconnectCounter++;
+            } else {
+                System.out.println("Not able to skip 4 bytes.");
             }
+
+
+
+
+        } catch (IOException e) {
+            System.err.println("Couldn't get I/O");
+            disconnectCounter++;
         }
-        if(disconnectCounter > 10) System.out.println("Disconnecting...");
     }
 }

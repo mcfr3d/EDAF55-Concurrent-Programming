@@ -1,7 +1,6 @@
 package main.java;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -18,9 +17,10 @@ public class Monitor {
     public synchronized void parseImageBytes(byte[] bytes) {
         long startTime = System.currentTimeMillis();
         System.out.println("Reading: " + startTime);
+        ByteArrayInputStream in = new ByteArrayInputStream(bytes);
         BufferedImage image = null;
         try {
-            image = ImageIO.read(new ByteArrayInputStream(bytes));
+            image = ImageIO.read(in);
         } catch (IOException e) {
             System.err.println("Image was not reassembled.");
         }
