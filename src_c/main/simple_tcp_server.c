@@ -6,6 +6,8 @@
 #include <string.h>
 #include "camera.h"
 
+#define USE_CAMERA
+
 static int bind_server_socket(int fd, int port);
 
 /*
@@ -103,7 +105,7 @@ static int bind_server_socket(int fd, int port){
      error:
         printf("Closing clientfd (%d)\n",clientfd);
     return close(clientfd);
-}*/
+}
 
 static int do_serve(int fd, camera* cam)
 {
@@ -127,10 +129,10 @@ static int do_serve(int fd, camera* cam)
      error:
         printf("Closing clientfd (%d)\n",clientfd);
     return close(clientfd);
-}
+}*/
 
-int main()
-{
+int main(int argc, char *argv[])
+{   printf("main running");
     int fd = create_server_socket(5000);
 
     if(fd < 0){
@@ -142,13 +144,13 @@ int main()
         int i = 0;
         int n = 247;
         camera* cam = camera_open();
-        printf("Opening camera...\n");
+        /*printf("Opening camera...\n");
         do {
             printf("Wating for clients to connect...\n");
             do_serve(fd, cam);
             i++;
         }
-        while(i < n);
+        while(i < n);*/
         camera_close(cam);
     }
 

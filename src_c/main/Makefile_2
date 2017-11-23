@@ -38,10 +38,10 @@ server_common.o: server_common.c server_common.h
 camera.o: camera.c camera.h fakecapture.h
 
 clean:
-	-rm simple_tcp_server.o motion_server.o server_common.o camera.o
+	-rm test_tcp_server.o motion_server.o server_common.o camera.o
 
 distclean: clean
-	-rm simple_tcp_server motion_server
+	-rm test_tcp_server motion_server
 
 .PHONY: all clean
 

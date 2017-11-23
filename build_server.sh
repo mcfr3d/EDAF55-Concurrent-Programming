@@ -9,4 +9,4 @@ cd src_c/main
 make -f Makefile
 # {rm -rfv fake_server.dSYM} &>/dev/null
 cd ../..
-mv src_c/main/simple_tcp_server bin_c/Server
+mv src_c/main/simple_tcp_server Server
