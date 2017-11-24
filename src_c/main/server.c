@@ -14,6 +14,10 @@
 #define INFO
 
 #define BUFSIZE 50000
+
+#define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
+#define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
+
 struct client{
     int  connfd;
     byte sendBuff[BUFSIZE];
@@ -110,9 +114,9 @@ ssize_t setup_packet(struct client* client, uint32_t frame_sz, frame* fr)
     uint32_t flipped_sz = htonl(frame_sz);
     memcpy(client->sendBuff, &flipped_sz, 4);
     
-    unsigned long long time_stamp = get_frame_timestamp(fr);
+    uint64_t time_stamp = get_frame_timestamp(fr);
     printf("Time stamp: %llu \n", time_stamp);
-    unsigned long long flipped_stamp = reverseBits(time_stamp);
+    uint64_t flipped_stamp = htonll(time_stamp);
     printf("Flipped stamp: %llu \n", flipped_stamp);
 
     client->frame_data = client->sendBuff + 4;
