@@ -104,9 +104,13 @@ ssize_t setup_packet(struct client* client, uint32_t frame_sz, frame* fr)
     memcpy(client->sendBuff, &flipped_sz, 4);
     
     uint64_t time_stamp = get_frame_timestamp(fr);
+#ifdef DEBUG
     printf("Time stamp: %llu \n", time_stamp);
+#endif
     uint64_t flipped_stamp = htonll(time_stamp);
+#ifdef DEBUG
     printf("Flipped stamp: %llu \n", flipped_stamp);
+#endif
 
     client->frame_data = client->sendBuff + 4;
     memcpy(client->frame_data, &flipped_stamp, 8);
@@ -136,7 +140,9 @@ int client_send_frame(struct client* client, frame* fr)
 #endif
 
     size_t frame_sz = get_frame_size(fr);
+#ifdef DEBUG
     printf("Size of frame: %d\n", frame_sz);
+#endif
     byte* data = get_frame_bytes(fr);
     int result;
 
@@ -225,8 +231,9 @@ void switch_mode(struct global_state* s)
     if(s->mode == IDLE) {
       printf("Trying to create sleep thread\n");
       int res = create_sleep_thread(s);
-      printf("Creating sleep thread result: %i\n",res);
+      printf("Creating sleep thread result: %i\n",res);    
     }
+    else pthread_cond_broadcast(&global_cond);
     pthread_mutex_unlock(&global_mutex);
 }
 
@@ -282,9 +289,12 @@ void* sleep_task(void *ctxt)
   pthread_mutex_lock(&global_mutex);
   printf("In sleep task\n");
   while(s->running && s->mode == IDLE){
+      pthread_mutex_unlock(&global_mutex);
       printf("Sleeping...\n");
       sleep(IDLE_DELAY);
       printf("Done sleeping. Nice nap.\n");
+
+      pthread_mutex_lock(&global_mutex);
       pthread_cond_broadcast(&global_cond);
   }
   pthread_mutex_unlock(&global_mutex);
@@ -293,8 +303,6 @@ void* sleep_task(void *ctxt)
 
 int create_sleep_thread(struct global_state* state)
 {
-    printf("Create sleep thread\n");
-    printf("In mutex lock, create sleep thread\n");
     int result = 0;
     if (pthread_create(&state->sleep_thread, 0, sleep_task, state)) {
         printf("Error pthread_create()\n");
@@ -312,6 +320,7 @@ void* main_task(void *ctxt)
 {
 
     struct global_state* state = ctxt;
+    delay_if_idle(state);
     return (void*) (intptr_t) serve_clients(state);
 }
 
@@ -323,9 +332,13 @@ int try_accept(struct global_state* state, struct client* client)
 	return 1;
     }
     client->cam = state->cam;
+#ifdef INFO
     printf("Waiting for client to accept\n");
+#endif
     client->connfd = accept(state->listenfd, (struct sockaddr*)NULL, NULL);
+#ifdef INFO
     printf("Client accepted\n");
+#endif
     if(client->connfd < 0) {
         result = errno;
     } else {
@@ -465,6 +478,8 @@ void init_global_state(struct global_state* state)
     state->quit=0;
     state->cam=NULL;
     state->mode = IDLE;
+    int res = create_sleep_thread(state);
+    printf("Init sleep thread. Result: %i\n",res);
     pthread_mutex_unlock(&global_mutex);
 }
 
