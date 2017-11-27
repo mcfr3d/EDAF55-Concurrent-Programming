@@ -9,10 +9,22 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "server_common.h"
+#include <sys/time.h>
+
+long long current_timestamp() {
+    struct timeval te; 
+    gettimeofday(&te, NULL); // get current time
+    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // caculate milliseconds
+    // printf("milliseconds: %lld\n", milliseconds);
+    return milliseconds;
+} 
 
 #define USE_CAMERA
+#define DEBUG
+//#define INFO
 
 #define BUFSIZE 50000
+#define RECVSIZE 2
 #define IDLE_DELAY 5
 
 #define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
@@ -29,6 +41,7 @@ struct serve_args{
 struct client{
     int  connfd;
     byte sendBuff[BUFSIZE];
+    byte recvBuff[RECVSIZE];
 #ifdef USE_CAMERA
     camera* cam;
     byte* frame_data;
@@ -41,6 +54,7 @@ struct global_state {
     mode_t mode;
     pthread_t main_thread;
     pthread_t client_thread;
+    pthread_t client_input_thread;
     pthread_t ui_thread;
     pthread_t sleep_thread;
     pthread_t bg_thread;
@@ -54,6 +68,7 @@ struct global_state {
 unsigned long long reverseBits(unsigned long long num);
 int client_write_n(struct client* client, size_t n);
 void* serve_client(void *ctxt);
+void* read_input(void *ctxt);
 void server_quit(struct global_state* s);
 void signal_to_bg_task();
 int is_running(struct global_state* state);
@@ -107,7 +122,8 @@ ssize_t setup_packet(struct client* client, uint32_t frame_sz, frame* fr)
     uint32_t flipped_sz = htonl(frame_sz);
     memcpy(client->sendBuff, &flipped_sz, 4);
     
-    uint64_t time_stamp = get_frame_timestamp(fr);
+    //uint64_t time_stamp = get_frame_timestamp(fr);
+    uint64_t time_stamp = current_timestamp();
 #ifdef DEBUG
     printf("Time stamp: %llu \n", time_stamp);
 #endif
@@ -227,11 +243,12 @@ void server_quit(struct global_state* s)
     pthread_mutex_unlock(&global_mutex);
 }
 
-void switch_mode(struct global_state* s) 
+
+void set_mode(struct global_state* s, mode_t mode)
 {
     pthread_mutex_lock(&global_mutex);
     printf("Old mode: %s\n", modeNames[s->mode]);
-    s->mode = (s->mode == IDLE) ? MOVIE : IDLE;
+    s->mode = mode;
     printf("New mode: %s\n", modeNames[s->mode]);
   
     if(s->mode == IDLE) {
@@ -241,6 +258,16 @@ void switch_mode(struct global_state* s)
     }
     else pthread_cond_broadcast(&global_cond);
     pthread_mutex_unlock(&global_mutex);
+
+}
+
+void switch_mode(struct global_state* s) 
+{
+    mode_t old_mode = IDLE; 
+    pthread_mutex_lock(&global_mutex);
+    old_mode = s->mode;
+    pthread_mutex_unlock(&global_mutex);
+    set_mode(s, old_mode ^ 1);
 }
 
 void* ui_task(void *ctxt)
@@ -350,11 +377,15 @@ int try_accept(struct global_state* state, struct client* client)
     } else {
 #ifdef INFO
 	printf("accepted connection\n");
+	printf("connfd: %i\n",client->connfd);
 #endif
         
 	struct serve_args args;
 	args.client = client;
 	args.state = state;
+#ifdef INFO
+	printf("After args init\n");
+#endif
 	// serve clients in separate thread, for four reasons
 	// 1. Illustrate threading
 	// 2. Not blocking the user interface while serving client
@@ -364,18 +395,36 @@ int try_accept(struct global_state* state, struct client* client)
             printf("Error pthread_create()\n");
             perror("creating");
             result = errno;
-        } else {
-            void* status;
-            if(pthread_join(state->client_thread, &status)){
-                perror("join");
-                result = errno;
-            } else {
-#ifdef DEBUG
-		printf("Join: status = %d\n", (int)(intptr_t) status);
-#endif
-            }
         }
+#ifdef INFO
+	printf("After creating client_thread\n");
+#endif
+	if(pthread_create(&state->client_input_thread, 0, read_input, &args)) {
+            printf("Error pthread_create()\n");
+            perror("creating");
+            result = errno;
+        }
+	    	    
+#ifdef INFO
+	printf("After checking result\n");
+#endif
+        void* status;
+        if(pthread_join(state->client_thread, &status)){
+            perror("join");
+            result = errno;
+        }
+#ifdef INFO
+	printf("After joining client_thread\n");
+#endif
+        if(pthread_join(state->client_input_thread, &status)){
+            perror("join");
+            result = errno;
+        }
+	    
     }
+#ifdef INFO
+	printf("Result from creation of thread: %i\n", result);
+#endif
     return result;
 }
 void* serve_client(void *ctxt) 
@@ -383,10 +432,10 @@ void* serve_client(void *ctxt)
     struct serve_args* args = ctxt;
     struct client* client = args->client;
     struct global_state* state = args->state;
-    while(is_running(state)) {
+    int cres = 0;
+    while(is_running(state) && cres < 2) {
       delay_if_idle(state);
       memset(client->sendBuff, 0, sizeof(client->sendBuff));
-      int cres=0;
       if( !client->cam || (cres=try_get_frame(client))) {
           printf("ERROR getting frame from camera: %d\n",cres);
       }
@@ -395,6 +444,31 @@ void* serve_client(void *ctxt)
     return (void*) (intptr_t) close(client->connfd);
 }
 
+void* read_input(void *ctxt) 
+{
+    struct serve_args* args = ctxt;
+    struct client* client = args->client;
+    struct global_state* state = args->state;
+    int status = 1;
+    while(is_running(state) && status) {
+        memset(client->recvBuff, 0, sizeof(client->recvBuff));
+	status = recv(client->connfd, &client->recvBuff, RECVSIZE, MSG_WAITALL);
+        printf("Current receive status: %i\n", status);
+
+        if(status==RECVSIZE) {
+            byte running_status = client->recvBuff[0];
+	    if(running_status & 0xFF) {
+		// Shut down
+	    } else {
+	        byte mode_status = client->recvBuff[1];
+		mode_t mode = mode_status & 0xFF;
+		set_mode(state, mode);
+	    }
+        }
+    }
+
+    return (void*) (intptr_t) close(client->connfd);
+}
 
 /*
  * Returns number of bytes written.
