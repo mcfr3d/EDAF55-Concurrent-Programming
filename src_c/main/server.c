@@ -9,18 +9,39 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "server_common.h"
+#include <sys/time.h>
+
+long long current_timestamp() {
+    struct timeval te; 
+    gettimeofday(&te, NULL); // get current time
+    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // caculate milliseconds
+    // printf("milliseconds: %lld\n", milliseconds);
+    return milliseconds;
+} 
 
 #define USE_CAMERA
-#define INFO
+#define DEBUG
+//#define INFO
 
 #define BUFSIZE 50000
+#define RECVSIZE 2
+#define IDLE_DELAY 5
 
 #define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
 #define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 
+typedef enum {IDLE,MOVIE} mode_t;
+const char* modeNames[] = {"Idle", "Movie"};
+
+struct serve_args{
+    struct client* client;
+    struct global_state* state;
+};
+
 struct client{
     int  connfd;
     byte sendBuff[BUFSIZE];
+    byte recvBuff[RECVSIZE];
 #ifdef USE_CAMERA
     camera* cam;
     byte* frame_data;
@@ -30,9 +51,12 @@ struct global_state {
     int listenfd;
     int running;
     int quit;
+    mode_t mode;
     pthread_t main_thread;
     pthread_t client_thread;
+    pthread_t client_input_thread;
     pthread_t ui_thread;
+    pthread_t sleep_thread;
     pthread_t bg_thread;
     int motionfd;
 #ifdef USE_CAMERA
@@ -44,10 +68,12 @@ struct global_state {
 unsigned long long reverseBits(unsigned long long num);
 int client_write_n(struct client* client, size_t n);
 void* serve_client(void *ctxt);
+void* read_input(void *ctxt);
 void server_quit(struct global_state* s);
 void signal_to_bg_task();
 int is_running(struct global_state* state);
 int serve_clients(struct global_state* state);
+int create_sleep_thread(struct global_state* state);
 
 /////////////// camera stuff
 
@@ -82,24 +108,6 @@ void close_camera(struct global_state* state)
     }
 }
 
-
-/* Function to reverse bits of num */
-unsigned long long reverseBits(unsigned long long num)
-{
-    unsigned int  NO_OF_BITS = sizeof(num) * 8;
-    unsigned long long reverse_num = 0, i, temp;
- 
-    for (i = 0; i < NO_OF_BITS; i++)
-    {
-        temp = (num & (1 << i));
-        if(temp)
-            reverse_num |= (1 << ((NO_OF_BITS - 1) - i));
-    }
-  
-    return reverse_num;
-}
-
-
 /* Sets up the packet structure in client->sendBuff.
  * This is a minimal HTTP header for an image/jpeg
  *
@@ -114,10 +122,15 @@ ssize_t setup_packet(struct client* client, uint32_t frame_sz, frame* fr)
     uint32_t flipped_sz = htonl(frame_sz);
     memcpy(client->sendBuff, &flipped_sz, 4);
     
-    uint64_t time_stamp = get_frame_timestamp(fr);
+    //uint64_t time_stamp = get_frame_timestamp(fr);
+    uint64_t time_stamp = current_timestamp();
+#ifdef DEBUG
     printf("Time stamp: %llu \n", time_stamp);
+#endif
     uint64_t flipped_stamp = htonll(time_stamp);
+#ifdef DEBUG
     printf("Flipped stamp: %llu \n", flipped_stamp);
+#endif
 
     client->frame_data = client->sendBuff + 4;
     memcpy(client->frame_data, &flipped_stamp, 8);
@@ -147,7 +160,9 @@ int client_send_frame(struct client* client, frame* fr)
 #endif
 	
     size_t frame_sz = get_frame_size(fr);
+#ifdef DEBUG
     printf("Size of frame: %d\n", frame_sz);
+#endif
     byte* data = get_frame_bytes(fr);
     int result;
 	
@@ -195,19 +210,16 @@ int try_get_frame(struct client* client)
 }
 #endif
 
-/*
-int client_write_string(struct client* client)
+void delay_if_idle(struct global_state* s) 
 {
-  return write_string(client->connfd, client->sendBuff);
+  pthread_mutex_lock(&global_mutex);
+  if(s->mode == IDLE) {
+    printf("Waiting...\n");
+    pthread_cond_wait(&global_cond, &global_mutex);
+    printf("Done waiting.\n");
+  }
+  pthread_mutex_unlock(&global_mutex);
 }
-*/
-
-/*
- * Returns number of bytes written.
- * Returns -1 if an error occurs and sets errno.
- * Note: an error occurs if the web browser closes the connection
- *   (might happen when reloading too frequently)
- */
 
 
 /* signal the global condition variable
@@ -231,6 +243,33 @@ void server_quit(struct global_state* s)
     pthread_mutex_unlock(&global_mutex);
 }
 
+
+void set_mode(struct global_state* s, mode_t mode)
+{
+    pthread_mutex_lock(&global_mutex);
+    printf("Old mode: %s\n", modeNames[s->mode]);
+    s->mode = mode;
+    printf("New mode: %s\n", modeNames[s->mode]);
+  
+    if(s->mode == IDLE) {
+      printf("Trying to create sleep thread\n");
+      int res = create_sleep_thread(s);
+      printf("Creating sleep thread result: %i\n",res);    
+    }
+    else pthread_cond_broadcast(&global_cond);
+    pthread_mutex_unlock(&global_mutex);
+
+}
+
+void switch_mode(struct global_state* s) 
+{
+    mode_t old_mode = IDLE; 
+    pthread_mutex_lock(&global_mutex);
+    old_mode = s->mode;
+    pthread_mutex_unlock(&global_mutex);
+    set_mode(s, old_mode ^ 1);
+}
+
 void* ui_task(void *ctxt)
 {
   struct global_state* s = ctxt;
@@ -244,6 +283,10 @@ void* ui_task(void *ctxt)
       case 's':
         printf("I could print some status info\n");
         break;
+      case 'm':
+	printf("Switching mode.\n");
+	switch_mode(s);
+	break;
       case 'b':
         signal_to_bg_task();
       default:
@@ -271,8 +314,45 @@ void* bg_task(void *ctxt)
   return 0;
 }
 
+void* sleep_task(void *ctxt)
+{
+
+  struct global_state* s = ctxt;
+
+  pthread_mutex_lock(&global_mutex);
+  printf("In sleep task\n");
+  while(s->running && s->mode == IDLE){
+      pthread_mutex_unlock(&global_mutex);
+      printf("Sleeping...\n");
+      sleep(IDLE_DELAY);
+      printf("Done sleeping. Nice nap.\n");
+
+      pthread_mutex_lock(&global_mutex);
+      pthread_cond_broadcast(&global_cond);
+  }
+  printf("Done with sleep task\n");
+  pthread_mutex_unlock(&global_mutex);
+  return 0;
+}
+
+int create_sleep_thread(struct global_state* state)
+{
+    int result = 0;
+    if (pthread_create(&state->sleep_thread, 0, sleep_task, state)) {
+        printf("Error pthread_create()\n");
+        perror("creating sleep thread");
+        result = errno;
+        state->running=0;
+        goto failed_to_start_sleep_thread;
+    }
+    pthread_detach(state->sleep_thread);
+failed_to_start_sleep_thread:
+    return result;
+}
+
 void* main_task(void *ctxt)
 {
+
     struct global_state* state = ctxt;
     return (void*) (intptr_t) serve_clients(state);
 }
@@ -285,79 +365,110 @@ int try_accept(struct global_state* state, struct client* client)
 	return 1;
     }
     client->cam = state->cam;
+#ifdef INFO
     printf("Waiting for client to accept\n");
+#endif
     client->connfd = accept(state->listenfd, (struct sockaddr*)NULL, NULL);
+#ifdef INFO
     printf("Client accepted\n");
+#endif
     if(client->connfd < 0) {
         result = errno;
     } else {
 #ifdef INFO
 	printf("accepted connection\n");
+	printf("connfd: %i\n",client->connfd);
+#endif
+        
+	struct serve_args args;
+	args.client = client;
+	args.state = state;
+#ifdef INFO
+	printf("After args init\n");
 #endif
 	// serve clients in separate thread, for four reasons
 	// 1. Illustrate threading
 	// 2. Not blocking the user interface while serving client
 	// 3. Prepare for serving multiple clients concurrently
         // 4. The AXIS software requires capture to be run outside the main thread
-        if (pthread_create(&state->client_thread, 0, serve_client, client)) {
+        if (pthread_create(&state->client_thread, 0, serve_client, &args)) {
             printf("Error pthread_create()\n");
             perror("creating");
             result = errno;
-        } else {
-            void* status;
-            if(pthread_join(state->client_thread, &status)){
-                perror("join");
-                result = errno;
-            } else {
-#ifdef DEBUG
-		printf("Join: status = %d\n", (int)(intptr_t) status);
-#endif
-            }
         }
+#ifdef INFO
+	printf("After creating client_thread\n");
+#endif
+	if(pthread_create(&state->client_input_thread, 0, read_input, &args)) {
+            printf("Error pthread_create()\n");
+            perror("creating");
+            result = errno;
+        }
+	    	    
+#ifdef INFO
+	printf("After checking result\n");
+#endif
+        void* status;
+        if(pthread_join(state->client_thread, &status)){
+            perror("join");
+            result = errno;
+        }
+#ifdef INFO
+	printf("After joining client_thread\n");
+#endif
+        if(pthread_join(state->client_input_thread, &status)){
+            perror("join");
+            result = errno;
+        }
+	    
     }
+#ifdef INFO
+	printf("Result from creation of thread: %i\n", result);
+#endif
     return result;
 }
-void* serve_client(void *ctxt)
+void* serve_client(void *ctxt) 
 {
-    struct client* client = ctxt;
-    memset(client->sendBuff, 0, sizeof(client->sendBuff));
-
-
-	    int cres=0;
-            if( !client->cam || (cres=try_get_frame(client))) {
-                printf("ERROR getting frame from camera: %d\n",cres);
-//		send_internal_error(client, "Error getting frame from camera\n");
-            }
+    struct serve_args* args = ctxt;
+    struct client* client = args->client;
+    struct global_state* state = args->state;
+    int cres = 0;
+    while(is_running(state) && cres < 2) {
+      delay_if_idle(state);
+      memset(client->sendBuff, 0, sizeof(client->sendBuff));
+      if( !client->cam || (cres=try_get_frame(client))) {
+          printf("ERROR getting frame from camera: %d\n",cres);
+      }
+    }
 
     return (void*) (intptr_t) close(client->connfd);
 }
 
-
-/*
-static int do_serve(int fd, camera* cam)
+void* read_input(void *ctxt) 
 {
-    int clientfd;
+    struct serve_args* args = ctxt;
+    struct client* client = args->client;
+    struct global_state* state = args->state;
+    int status = 1;
+    while(is_running(state) && status) {
+        memset(client->recvBuff, 0, sizeof(client->recvBuff));
+	status = recv(client->connfd, &client->recvBuff, RECVSIZE, MSG_WAITALL);
+        printf("Current receive status: %i\n", status);
 
-    printf("Attempting accept on fd %d\n",fd);
-    if((clientfd = accept(fd, NULL, NULL)) < 0) return -1;
-    printf("Client connected.\n");
+        if(status==RECVSIZE) {
+            byte running_status = client->recvBuff[0];
+	    if(running_status & 0xFF) {
+		// Shut down
+	    } else {
+	        byte mode_status = client->recvBuff[1];
+		mode_t mode = mode_status & 0xFF;
+		set_mode(state, mode);
+	    }
+        }
+    }
 
-    frame *f = camera_get_frame(cam);
-    size_t size = get_frame_size(f);
-    byte *bytes = get_frame_bytes(f);
-
-    printf("Sending Picture Size\n");
-    write(clientfd, &size, sizeof(size));
-
-    printf("Sending picture.\n");
-    write(clientfd, bytes, size);
-
-    frame_free(f);
-     error:
-        printf("Closing clientfd (%d)\n",clientfd);
-    return close(clientfd);
+    return (void*) (intptr_t) close(client->connfd);
 }
-*/
 
 /*
  * Returns number of bytes written.
@@ -396,6 +507,9 @@ static int create_threads(struct global_state* state)
         goto failed_to_start_ui_thread;
     }
     pthread_detach(state->ui_thread);
+
+    int res = create_sleep_thread(state);
+    printf("Init sleep thread. Result: %i\n",res);
 failed_to_start_ui_thread:
 failed_to_start_main_thread:
 failed_to_start_bg_thread:
@@ -452,6 +566,7 @@ void init_global_state(struct global_state* state)
     state->running=0;
     state->quit=0;
     state->cam=NULL;
+    state->mode = IDLE;
     pthread_mutex_unlock(&global_mutex);
 }
 
@@ -562,32 +677,4 @@ failed_to_listen:
 no_server_socket:
   return result;
 
-
-
-  /*int fd = create_server_socket(port);
-
-    if(fd < 0){
-        perror("create_server_socket");
-        return 1;
-    }
-    int a;
-    for(a = 0; a<10; a++) {
-        int i = 0;
-        int n = 247;
-        camera* cam = camera_open();
-        printf("Opening camera...\n");
-        do {
-            printf("Wating for clients to connect...\n");
-            do_serve(fd, cam);
-            i++;
-        }
-        while(i < n);
-        camera_close(cam);
-    }
-
-
-    printf("Closing socket: %d\n", fd);
-    close(fd);
-
-    return 0;*/
 }
