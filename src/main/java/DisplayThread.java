@@ -27,12 +27,12 @@ public class DisplayThread extends Thread {
                 label.setIcon(new ImageIcon(image));
             }
 
-            try {
-                sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                interrupt();
-            }
+//            try {
+//                sleep(100);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//                interrupt();
+//            }
         }
     }
 }

@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.LinkedList;
 
 public class InputSocket extends Thread {
     public static final String LOCAL_HOST = "127.0.0.1";
@@ -34,6 +35,8 @@ public class InputSocket extends Thread {
             BufferedInputStream bis = null;
             try {
                 socket = new Socket(serverHostName, port);
+		System.out.println("socket created");
+		
                 bis = new BufferedInputStream(socket.getInputStream());
                 disconnectCounter = 0;
                 System.out.println("Fetching image...");
@@ -49,11 +52,11 @@ public class InputSocket extends Thread {
                 disconnectCounter++;
             }
 
-            try {
-                sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                sleep(10);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
 
         }
         if(disconnectCounter > 10) System.out.println("Disconnecting...");
@@ -82,17 +85,32 @@ public class InputSocket extends Thread {
                 disconnectCounter++;
                 return;
             }
-            byte[] imageArray = new byte[sizeOfImage];
-            if(is.skip(4) == 4) {
-                is.read(imageArray);
+	    int read = 0;
+            //byte[] imageArray = new byte[sizeOfImage];
+	    LinkedList<byte[]> list = new LinkedList<>();
+	    while(read < sizeOfImage) {
+//            if(is.skip(4) == 4) {
+	        byte[] imageArray = new byte[1];
+                read += is.read(imageArray);
+	        list.addLast(imageArray);
+	//	is.skip(49996);
+//            } else {
+//                System.out.println("Not able to skip 4 bytes.");
+//            }
+	    }
+	    byte[] imageArray = new byte[sizeOfImage];
+	    int counter = 0;
+	    for(byte[] arr: list) {
+		for(int i = 0; i<arr.length && counter+i < sizeOfImage; i++) {
+		    imageArray[counter+i] = arr[i];
+		}
+		counter += arr.length;
+	    }
+
                 if(mon != null) {
                     mon.parseImageBytes(imageArray);
                 }
-            } else {
-                System.out.println("Not able to skip 4 bytes.");
-            }
-
-
+	    is.skip(50000-4-sizeOfImage);
 
 
         } catch (IOException e) {

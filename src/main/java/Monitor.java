@@ -17,6 +17,7 @@ public class Monitor {
     public synchronized void parseImageBytes(byte[] bytes) {
         long startTime = System.currentTimeMillis();
         System.out.println("Reading: " + startTime);
+//	printBytes(bytes);
         ByteArrayInputStream in = new ByteArrayInputStream(bytes);
         BufferedImage image = null;
         try {
@@ -33,6 +34,13 @@ public class Monitor {
             notifyAll();
         } else {
             System.err.println("Image was corrupt.");
+        }
+    }
+
+    private void printBytes(byte[] array) {
+        for(int i = 0; i < array.length; i++) {
+	    System.out.print(array[i]);
+	    if(i % 10000 == 0 && i != 0) System.out.println();
         }
     }
 

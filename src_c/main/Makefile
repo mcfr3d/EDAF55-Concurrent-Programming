@@ -28,26 +28,20 @@ CFLAGS+=-O3 -g -Wall
 LDLIBS+=-lpthread
 
 # all: http_server motion_server
-all: simple_tcp_server motion_server
+all: server motion_server
 
-simple_tcp_server: simple_tcp_server.o  camera.o server_common.o
-simple_tcp_server.o: simple_tcp_server.c camera.h
+server: server.o  camera.o server_common.o
+server.o: server.c camera.h
 motion_server: motion_server.o  server_common.o
 motion_server.o: motion_server.c
 server_common.o: server_common.c server_common.h
 camera.o: camera.c camera.h fakecapture.h
 
-#clean:
-#	-rm http_server.o motion_server.o server_common.o camera.o
-
-#distclean: clean
-#	-rm http_server motion_server
-
 clean:
-	-rm simple_tcp_server.o motion_server.o server_common.o camera.o
+	-rm server.o motion_server.o server_common.o camera.o
 
 distclean: clean
-	-rm simple_tcp_server motion_server
+	-rm server motion_server
 
 .PHONY: all clean
 
