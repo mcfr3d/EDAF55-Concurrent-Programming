@@ -11,7 +11,6 @@
 #include "server_common.h"
 
 #define USE_CAMERA
-#define INFO
 
 #define BUFSIZE 50000
 #define IDLE_DELAY 5
@@ -21,6 +20,11 @@
 
 typedef enum {IDLE,MOVIE} mode_t;
 const char* modeNames[] = {"Idle", "Movie"};
+
+struct serve_args{
+    struct client* client;
+    struct global_state* state;
+};
 
 struct client{
     int  connfd;
@@ -194,7 +198,9 @@ void delay_if_idle(struct global_state* s)
 {
   pthread_mutex_lock(&global_mutex);
   if(s->mode == IDLE) {
+    printf("Waiting...\n");
     pthread_cond_wait(&global_cond, &global_mutex);
+    printf("Done waiting.\n");
   }
   pthread_mutex_unlock(&global_mutex);
 }
@@ -297,6 +303,7 @@ void* sleep_task(void *ctxt)
       pthread_mutex_lock(&global_mutex);
       pthread_cond_broadcast(&global_cond);
   }
+  printf("Done with sleep task\n");
   pthread_mutex_unlock(&global_mutex);
   return 0;
 }
@@ -320,7 +327,6 @@ void* main_task(void *ctxt)
 {
 
     struct global_state* state = ctxt;
-    delay_if_idle(state);
     return (void*) (intptr_t) serve_clients(state);
 }
 
@@ -345,12 +351,16 @@ int try_accept(struct global_state* state, struct client* client)
 #ifdef INFO
 	printf("accepted connection\n");
 #endif
+        
+	struct serve_args args;
+	args.client = client;
+	args.state = state;
 	// serve clients in separate thread, for four reasons
 	// 1. Illustrate threading
 	// 2. Not blocking the user interface while serving client
 	// 3. Prepare for serving multiple clients concurrently
         // 4. The AXIS software requires capture to be run outside the main thread
-        if (pthread_create(&state->client_thread, 0, serve_client, client)) {
+        if (pthread_create(&state->client_thread, 0, serve_client, &args)) {
             printf("Error pthread_create()\n");
             perror("creating");
             result = errno;
@@ -368,17 +378,19 @@ int try_accept(struct global_state* state, struct client* client)
     }
     return result;
 }
-void* serve_client(void *ctxt)
+void* serve_client(void *ctxt) 
 {
-    struct client* client = ctxt;
-    memset(client->sendBuff, 0, sizeof(client->sendBuff));
-
-
-	    int cres=0;
-            if( !client->cam || (cres=try_get_frame(client))) {
-                printf("ERROR getting frame from camera: %d\n",cres);
-//		send_internal_error(client, "Error getting frame from camera\n");
-            }
+    struct serve_args* args = ctxt;
+    struct client* client = args->client;
+    struct global_state* state = args->state;
+    while(is_running(state)) {
+      delay_if_idle(state);
+      memset(client->sendBuff, 0, sizeof(client->sendBuff));
+      int cres=0;
+      if( !client->cam || (cres=try_get_frame(client))) {
+          printf("ERROR getting frame from camera: %d\n",cres);
+      }
+    }
 
     return (void*) (intptr_t) close(client->connfd);
 }
@@ -421,6 +433,9 @@ static int create_threads(struct global_state* state)
         goto failed_to_start_ui_thread;
     }
     pthread_detach(state->ui_thread);
+
+    int res = create_sleep_thread(state);
+    printf("Init sleep thread. Result: %i\n",res);
 failed_to_start_ui_thread:
 failed_to_start_main_thread:
 failed_to_start_bg_thread:
@@ -478,8 +493,6 @@ void init_global_state(struct global_state* state)
     state->quit=0;
     state->cam=NULL;
     state->mode = IDLE;
-    int res = create_sleep_thread(state);
-    printf("Init sleep thread. Result: %i\n",res);
     pthread_mutex_unlock(&global_mutex);
 }
 
