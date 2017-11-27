@@ -2,16 +2,14 @@ package models;
 
 import javafx.scene.image.Image;
 
-import java.util.ArrayDeque;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 public class CameraModel {
     private boolean sync;
     private String ip;
     private int port;
     private long previousImageTime = Long.MIN_VALUE;
-    private Queue<ImageModel> imageBuffer;
+    private LinkedList<ImageModel> imageBuffer;
 
     public CameraModel(String ip, int port) {
         imageBuffer = new LinkedList<>();
@@ -22,7 +20,20 @@ public class CameraModel {
 
 
     public void putImage(ImageModel image) {
-        imageBuffer.add(image);
+        ListIterator itr = imageBuffer.listIterator();
+        while(itr.hasNext()){
+            if(image.getTimeStamp() < ((ImageModel)itr.next()).getTimeStamp()){
+                if(itr.hasPrevious()){
+                    itr.previous();
+                    itr.add(image);
+                }else{
+                    imageBuffer.addFirst(image);
+                }
+                return;
+            }
+        }
+        if(!imageBuffer.isEmpty()) System.out.println("DIFF: " + (image.getTimeStamp() - imageBuffer.peek().getTimeStamp()));
+        imageBuffer.addLast(image);
     }
 
     public boolean hasImage() {
@@ -31,7 +42,6 @@ public class CameraModel {
 
     public ImageModel getImage() {
         ImageModel imageModel = imageBuffer.poll();
-        previousImageTime = imageModel.getTimeStamp();
         return imageModel;
 
     }

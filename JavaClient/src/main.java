@@ -49,7 +49,9 @@ public class main extends Application {
         CameraMonitor cameraMonitor = new CameraMonitor();
         SyncThread syncThread = new SyncThread(cameraMonitor,spTest);
         syncThread.start();
-        cameraMonitor.connectCamera("127.0.0.1" , 5000);
+        cameraMonitor.connectCamera("argus-3" , 5000);
+        cameraMonitor.connectCamera("argus-5" , 5000);
+
         //cameraMonitor.connectCamera("127.0.0.1" , 5000);
 
         primaryStage.getScene().getStylesheets().add("css/main.css");

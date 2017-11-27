@@ -26,8 +26,9 @@ public class InputThread extends Thread {
         try {
             DataInputStream inputStream = new DataInputStream(socket.getInputStream());
             while (true) {
-                ImageModel imageModel = fetchImage(inputStream);
+                ImageModel imageModel = fetchImage(new DataInputStream(socket.getInputStream()));
                 cameraMonitor.addImage(this.hashCode(), imageModel);
+
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -35,7 +36,7 @@ public class InputThread extends Thread {
     }
 
     public ImageModel fetchImage(DataInputStream inputStream) throws IOException {
-        while (cameraMonitor.isAlive()) {
+        //while (cameraMonitor.isAlive()) {
             byte[] sizeAr = new byte[4];
             int total = 0;
 
@@ -56,12 +57,10 @@ public class InputThread extends Thread {
             while (total < size) {
                 total += inputStream.read(imgAr, total, size - total);
             }
-            System.out.println(timeStamp);
             Image img = new Image(new ByteArrayInputStream(imgAr));
             return new ImageModel(img ,timeStamp);
 
-        }
-        return null;
+        //}
 
     }
 }

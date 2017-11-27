@@ -5,19 +5,17 @@ import threads.InputThread;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Stream;
 
 enum MotionMode{
     MOTION,IDLE,AUTO;
 }
 public class CameraMonitor {
-    HashMap<Integer , CameraModel> cameraMap;
-    boolean sync = false;
-    MotionMode motionMode = MotionMode.AUTO;
-    boolean alive = true;
+    private HashMap<Integer , CameraModel> cameraMap;
+    private boolean sync = true;
+    private MotionMode motionMode = MotionMode.AUTO;
+    private boolean alive = true;
     public CameraMonitor(){
         cameraMap = new HashMap<>();
     }
@@ -57,50 +55,108 @@ public class CameraMonitor {
     synchronized public void setSync(boolean sync) {
         this.sync = sync;
     }
+    private boolean anyHasImages(){
+        return cameraMap.values()
+                .stream()
+                .map((camera) -> camera.hasImage())
+                .reduce(false,(res,hasImage) -> res || hasImage);
+    }
+    private boolean allHasImage(){
 
-    synchronized public Map.Entry<Integer , ImageModel> getImage(){
-        long minTime = Long.MAX_VALUE;
-        int oldestEntry = Integer.MAX_VALUE;
-        while(cameraMap.isEmpty()){
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        for(Map.Entry<Integer, CameraModel> pair : cameraMap.entrySet()){
-            while(!pair.getValue().hasImage()){
-                try {
-                    wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        return cameraMap.values()
+                .stream()
+                .map((camera) -> camera.hasImage())
+                .reduce(true,(res,hasImage) -> res && hasImage);
+
+    }
+    private long longestDiff(){
+        long longestDiff = 0;
+        ArrayList<CameraModel> cameraModels =  new ArrayList<>(cameraMap.values());
+        /*for(int n = 0 ; n < cameraMap.values().size() ; n++){
+            for(int m = n+1 ; m < cameraMap.values().size() ; m++){
+                if(cameraModels.get(n).hasImage() && cameraModels.get(m).hasImage()) {
+                    long diff = cameraModels.get(n).peekImage().getTimeStamp() - cameraModels.get(m).peekImage().getTimeStamp();
+                    diff = Math.abs(diff)/1000000;
+                    System.out.println(diff);
+                    if (diff > longestDiff) {
+                        longestDiff = diff;
+                    }
                 }
             }
-            if(pair.getValue().getPreviousImageTime() == Long.MIN_VALUE){
-                System.out.println("ZERRRRO");
-                return new AbstractMap.SimpleEntry<>(pair.getKey(),pair.getValue().getImage());
-            }
-            long timeStamp = pair.getValue().peekImage().getTimeStamp();
+        }*/
+        //return longestDiff;
+        if(cameraModels.get(0).hasImage() && cameraModels.get(1).hasImage()){
+            return Math.abs(cameraModels.get(0).peekImage().getTimeStamp() - cameraModels.get(1).peekImage().getTimeStamp());
+        }
+        return Long.MAX_VALUE;
+    }
+    synchronized public ArrayList<Map.Entry<Integer,ImageModel>> getImage(){
+        ArrayList<Map.Entry<Integer,ImageModel>> imageList  = new ArrayList<>();
+        while(!anyHasImages() ){
+            try {
+                wait();
 
-            if(timeStamp < minTime){
-                oldestEntry = pair.getKey();
-                minTime = timeStamp;
-                System.out.println("FOUND");
+            } catch (InterruptedException e) {
+                //Error
             }
         }
-        System.out.println("id: "+oldestEntry);
-        ImageModel oldestImage = cameraMap.get(oldestEntry).peekImage();
-        try {
-            System.out.println("Sleep: " + (oldestImage.getTimeStamp()-cameraMap.get(oldestEntry).getPreviousImageTime()));
-            Thread.sleep(oldestImage.getTimeStamp()-cameraMap.get(oldestEntry).getPreviousImageTime());
-            cameraMap.get(oldestEntry).getImage();
-            //wait(oldestImage.getTimeStamp()-minTime);
-            return  new AbstractMap.SimpleEntry<Integer, ImageModel>(oldestEntry,oldestImage);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if(sync){
+            for(Map.Entry<Integer,CameraModel> entry : cameraMap.entrySet()){
+                if(entry.getValue().hasImage()){
+                    //En har bild.
+                    while(!allHasImage()){
+                        System.out.println("ALL HAS");
+                        try {
+                            long currentTime = System.currentTimeMillis();
+
+                            wait(200);
+
+                            if(System.currentTimeMillis() >= currentTime + 200){
+                                sync = false;
+                                break;
+                            }
+
+
+
+
+                        } catch (InterruptedException e) {
+
+                        }
+                    }
+                    System.out.println(allHasImage());
+                    if(longestDiff() > 200 ){
+                        sync = false;
+                    }
+
+                    for(Map.Entry<Integer,CameraModel> entryToArray :cameraMap.entrySet()){
+                        if(entryToArray.getValue().hasImage()) {
+                            imageList.add(new AbstractMap.SimpleEntry<Integer, ImageModel>(entryToArray.getKey(), entryToArray.getValue().getImage()));
+                        }
+                    }
+                    break;
+                }
+            }
+        }else{ //ASYNC
+
+            if(allHasImage() && longestDiff() <= 200){
+                sync = true;
+            }
+            for(Map.Entry<Integer,CameraModel> entryToArray :cameraMap.entrySet()){
+                if(entryToArray.getValue().hasImage()) {
+                    imageList.add(new AbstractMap.SimpleEntry<Integer, ImageModel>(entryToArray.getKey(), entryToArray.getValue().getImage()));
+                }
+            }
+
         }
 
-        return null;
+
+        imageList.sort(new Comparator<Map.Entry<Integer, ImageModel>>() {
+            @Override
+            public int compare(Map.Entry<Integer, ImageModel> o1, Map.Entry<Integer, ImageModel> o2) {
+                return (int) (o1.getValue().getTimeStamp() - o2.getValue().getTimeStamp());
+            }
+        });
+        return imageList;
 
     }
 

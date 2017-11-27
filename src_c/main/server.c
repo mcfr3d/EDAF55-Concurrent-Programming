@@ -145,12 +145,12 @@ int client_send_frame(struct client* client, frame* fr)
         return 2;
     }
 #endif
-
+	
     size_t frame_sz = get_frame_size(fr);
     printf("Size of frame: %d\n", frame_sz);
     byte* data = get_frame_bytes(fr);
     int result;
-
+	
     ssize_t packet_sz = setup_packet(client, frame_sz, fr);
 
     if(packet_sz < 0) {

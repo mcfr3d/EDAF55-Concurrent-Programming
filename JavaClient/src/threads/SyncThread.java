@@ -5,6 +5,8 @@ import models.CameraModel;
 import models.CameraMonitor;
 import models.ImageModel;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,16 +22,46 @@ public class SyncThread extends Thread {
     @Override
     public void run() {
         while (cameraMonitor.isAlive()) {
-            Map.Entry<Integer,ImageModel> nextImage = cameraMonitor.getImage();
-            imageGridView.updateImage(nextImage.getValue().getImage(),nextImage.getKey());
-            /*cameraMonitor.waitForImage();
-            HashMap<Integer , ImageModel> imageMap = cameraMonitor.getImages();
-            imageMap.forEach((key, imageModel) -> {
-                if(imageModel != null){
-                    imageGridView.updateImage(imageModel.getImage(),key);
-                }
-            });*/
+            ArrayList<Map.Entry<Integer,ImageModel>> nextImages = cameraMonitor.getImage();
+            long previousTimeStamp = 0;
+            int counter = 0;
+            boolean first = true;
 
+            if(cameraMonitor.isSync()){
+                System.out.println("N-SYNC");
+
+                for(Map.Entry<Integer,ImageModel> entry : nextImages){
+                    ImageModel imageModel = entry.getValue();
+                    if(first){
+                        imageGridView.updateImage(imageModel.getImage(),entry.getKey());
+                        first = false;
+                    }
+                    else{
+                        try {
+
+                        long diff = (imageModel.getTimeStamp() - previousTimeStamp);
+                        Thread.sleep(diff);
+                        System.out.println(diff);
+                        //System.out.println(diff);
+                        imageGridView.updateImage(imageModel.getImage(),entry.getKey());
+
+                        } catch (InterruptedException e) {
+
+                        }
+                    }
+                    counter ++;
+                    previousTimeStamp = imageModel.getTimeStamp();
+
+                }
+            }else {
+                System.out.println("NOSYNC");
+                for (Map.Entry<Integer, ImageModel> entry : nextImages) {
+                    ImageModel imageModel = entry.getValue();
+                    imageGridView.updateImage(imageModel.getImage(), entry.getKey());
+
+                }
+            }
         }
+
     }
 }
