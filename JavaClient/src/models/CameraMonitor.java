@@ -1,5 +1,6 @@
 package models;
 
+import constants.Constants;
 import javafx.scene.image.Image;
 import threads.InputThread;
 import threads.MotionListener;
@@ -9,18 +10,57 @@ import java.net.Socket;
 import java.util.*;
 import java.util.stream.Stream;
 
-enum MotionMode{
-    MOTION,IDLE,AUTO;
-}
+
 public class CameraMonitor {
+
     private HashMap<Integer , CameraModel> cameraMap;
     private boolean sync = true;
-    private MotionMode motionMode = MotionMode.AUTO;
+    private boolean forceSync = true;
+    private ArrayList<Socket> activeSockets;
+    private boolean motionModeChanged = false;
+    private int motionMode = Constants.MotionMode.IDLE;
+    private int forceMode  = Constants.MotionMode.AUTO;
+
     private boolean alive = true;
     public CameraMonitor(){
         cameraMap = new HashMap<>();
+        activeSockets = new ArrayList<>();
     }
-    synchronized public void addImage(int camera,ImageModel imageModel){
+
+
+    synchronized public int getMotionMode() {
+        while(forceMode != Constants.MotionMode.AUTO || motionModeChanged){
+            try {
+                wait();
+            } catch (InterruptedException e) {
+
+            }
+        }
+        return motionMode;
+    }
+    synchronized public void setMotionMode(int mode){
+        motionMode = mode;
+        motionModeChanged = true;
+        notifyAll();
+    }
+
+    synchronized public boolean isMotionModeChanged() {
+        return motionModeChanged;
+    }
+
+    synchronized public void setMotionModeChanged(boolean motionModeChanged) {
+        this.motionModeChanged = motionModeChanged;
+    }
+
+    synchronized public void setForceMode(int mode){
+       forceMode = mode;
+       notifyAll();
+    }
+
+
+
+
+    synchronized public void addImage(int camera, ImageModel imageModel){
             cameraMap.get(camera).putImage(imageModel);
             notifyAll();
     }
@@ -31,25 +71,16 @@ public class CameraMonitor {
     synchronized public void connectCamera(String address , int port){
         try {
             Socket socket = new Socket(address, port);
-            InputThread inputThread = new InputThread(socket, this);
-            MotionListener motionListener = new MotionListener(this,address);
+            activeSockets.add(socket);
+            InputThread inputThread = new InputThread(socket, this); //ERROR
+            MotionListener motionListener = new MotionListener(this,address); //ERROR
             cameraMap.put(inputThread.hashCode(),new CameraModel(address,port));
-            motionListener.start();
-            inputThread.start();
+            motionListener.start(); //ERRROR
+            inputThread.start(); //ERROR
         }catch(IOException e){
             //Couldnt connect
         }
     }
-    /*synchronized public HashMap<Integer,ImageModel> getImages(){
-        HashMap<Integer , ImageModel> imageMap = new HashMap<>();
-
-        cameraMap.forEach((key, value) -> {
-            imageMap.put(key , value.getImage());
-        });
-        return imageMap;
-    }*/
-
-
 
     synchronized public boolean isSync() {
         return sync;
