@@ -9,7 +9,9 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import models.ButtonMonitor;
 import models.CameraMonitor;
+import threads.ButtonHandler;
 import threads.SyncThread;
 
 
@@ -21,48 +23,38 @@ public class main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("Hello World!");
+        primaryStage.setTitle("Realtime Cameras");
 
 
         BorderPane root = new BorderPane();
         primaryStage.setMinWidth(800);
         primaryStage.setMinHeight(600);
 
-        ObservableList<CameraModel> cm = FXCollections.observableArrayList();
-        for(int n = 0 ; n<100;n++){
-            CameraModel m = new CameraModel("Rum " + n , "192.168.0."+n, n%2 == 0);
-            cm.add(m);
-        }
         primaryStage.setScene(new Scene(root, 800 ,600));
-        CameraListView cv = new CameraListView(cm);
 
+        ImageGridView imageGridView = new ImageGridView(root.getWidth(), root.getHeight() - 100);
 
+        root.setCenter(imageGridView);
 
-        //root.setLeft(cv);
-        primaryStage.show();
-        ImageGridView spTest = new ImageGridView(root.getWidth() - cv.getWidth()  , root.getHeight() - 100);
-
-        BorderPane bp2 = new BorderPane(spTest);
-        bp2.setBottom(new ControlPane());
-
-        root.setCenter(bp2);
         CameraMonitor cameraMonitor = new CameraMonitor();
-        SyncThread syncThread = new SyncThread(cameraMonitor,spTest);
+        SyncThread syncThread = new SyncThread(cameraMonitor,imageGridView);
         syncThread.start();
-        cameraMonitor.connectCamera("argus-2" , 6666);
-        cameraMonitor.connectCamera("argus-4" , 6666);
 
-        //cameraMonitor.connectCamera("127.0.0.1" , 5000);
+        ButtonMonitor buttonMonitor = new ButtonMonitor();
+        ButtonHandler buttonHandler = new ButtonHandler(cameraMonitor,buttonMonitor);
+        buttonHandler.start();
+        root.setBottom(new ControlPane(buttonMonitor, primaryStage));
+
 
         primaryStage.getScene().getStylesheets().add("css/main.css");
 
         primaryStage.widthProperty().addListener((obs, oldVal, newVal) -> {
             System.out.println(newVal);
-            spTest.updateSize(newVal.doubleValue() - cv.getWidth() , root.getHeight() - 100);
+            imageGridView.updateSize(newVal.doubleValue(), root.getHeight() - 100);
         });
 
         primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> {
-            spTest.updateSize(root.getWidth() - cv.getWidth() , root.getHeight() - 100);
+            imageGridView.updateSize(root.getWidth(), root.getHeight() - 100);
         });
 
         primaryStage.setOnCloseRequest((event -> {cameraMonitor.kill();

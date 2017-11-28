@@ -11,88 +11,18 @@
     -fx-min-width:100px;
 
 }
-.camera-cell:filled:selected:focused, .camera-cell:filled:selected {
-    -fx-background-color: inherit;
-
-    -fx-border-color: #9372FF;
-
-
-}
-.camera-cell{
-    -fx-border-style: solid;
-    -fx-border-color: transparent;
-
-    -fx-border-width: 0 0 0 4px;
- }
-.camera-cell:odd {
-    -fx-background-color: white;
-}
-
-.camera-list{
-    -fx-focus-color: transparent;
-    -fx-faint-focus-color: transparent;
-    -fx-border-style:none;
-
-}
-/* The main scrollbar **track** CSS class  */
-.camera-list .scroll-bar:horizontal .track,
-.camera-list .scroll-bar:vertical .track{
-	-fx-background-color:white;
-	-fx-border-color:transparent;
-
-}
-
-/* The increment and decrement button CSS class of scrollbar */
-.camera-list .scroll-bar:horizontal .increment-button ,
-.camera-list .scroll-bar:horizontal .decrement-button {
-    -fx-background-color:transparent;
-	-fx-background-radius: 0em;
-	-fx-padding:0 0 10 0;
-
-}
-
-/* The increment and decrement button CSS class of scrollbar */
-
-.camera-list .scroll-bar:vertical .increment-button ,
-.camera-list .scroll-bar:vertical .decrement-button {
-
-    -fx-background-color:transparent;
-	-fx-background-radius: 0em;
-	-fx-padding:0 10 0 0;
-
-}
-
-.camera-list  .scroll-bar .increment-arrow,
-.camera-list  .scroll-bar .decrement-arrow
- {
-	-fx-shape: " ";	
-	-fx-padding:0;
-}
-
-/* The main scrollbar **thumb** CSS class which we drag every time (movable) */
-.camera-list .scroll-bar:horizontal .thumb,
-.camera-list .scroll-bar:vertical .thumb {
-    -fx-background-color:derive(black,90%);
-	-fx-background-insets: 2, 0, 0;
-	-fx-background-radius: 2em;
-
-}
-
-
-
-.camera-name-txt{
-    -fx-font-size: 16;
+.add-button{
+    -fx-background-color:#9372FF;
+    -fx-background-radius: 50000px;
+    -fx-border-radius: 100px;
+    -fx-padding: 4px 8px;
+    -fx-text-fill: white;
+    -fx-font-size: 24;
     -fx-font-family: "Helvetica" , "Arial";
     -fx-font-weight: bold;
-}
-.ip-txt{
-    -fx-font-size: 14;
-    -fx-font-family: "Helvetica" , "Arial";
-
-}
-
-.camera-item{
-    -fx-padding: 10 0 0 0;
+    -fx-cursor: hand;
+    -fx-min-width:60px;
+    -fx-min-height:60px;
 
 }
 .multiple-choice{

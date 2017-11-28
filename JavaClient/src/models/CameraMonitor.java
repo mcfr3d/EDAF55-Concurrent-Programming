@@ -1,15 +1,14 @@
 package models;
 
 import constants.Constants;
-import javafx.scene.image.Image;
 import threads.InputThread;
 import threads.MotionListener;
 import threads.OutputThread;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.*;
-import java.util.stream.Stream;
 
 
 public class CameraMonitor {
@@ -41,6 +40,7 @@ public class CameraMonitor {
 
             }
         }
+        System.out.println("IM AUTo");
         return motionMode;
     }
     synchronized public int getMotionModeOutput() {
@@ -52,6 +52,16 @@ public class CameraMonitor {
             }
         }
         return motionMode;
+    }
+    private void forceIdle(Socket socket){
+        try {
+            OutputStream os = socket.getOutputStream();
+            os.write(0x00);
+            os.write(Constants.MotionCode.IDLE);
+
+        } catch (IOException e) {
+
+        }
     }
     synchronized public void setMotionMode(int mode){
         motionMode = mode;
@@ -69,11 +79,11 @@ public class CameraMonitor {
 
     synchronized public void setForceMode(int mode){
        forceMode = mode;
+       if(forceMode != Constants.MotionMode.AUTO){
+           setMotionMode(forceMode);
+       }
        notifyAll();
     }
-
-
-
 
     synchronized public void addImage(int camera, ImageModel imageModel){
             cameraMap.get(camera).putImage(imageModel);
@@ -87,6 +97,7 @@ public class CameraMonitor {
         try {
             Socket socket = new Socket(address, port);
             activeSockets.add(socket);
+            forceIdle(socket);
             InputThread inputThread = new InputThread(socket, this); //ERROR
             MotionListener motionListener = new MotionListener(this,address); //ERROR
             cameraMap.put(inputThread.hashCode(),new CameraModel(address,port));
