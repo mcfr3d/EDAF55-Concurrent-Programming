@@ -9,7 +9,7 @@
 *.iws
 
 #Bin C
-bin_c/
+bin_c/*
 
 # Mac
 .DS_Store

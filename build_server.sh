@@ -11,7 +11,10 @@ ABORT="Aborting..."
 cd src_c/main
 make -f Makefile
 # {rm -rfv fake_server.dSYM} &>/dev/null
+
 cd ../..
+
+{mkdir bin_c} &>/dev/null
 mv src_c/main/server bin_c/$FILE_NAME
 
 printf "\n*****\nDo you want to transfer it to the camera? (y/n)\n"

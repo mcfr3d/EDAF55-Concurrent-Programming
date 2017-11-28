@@ -49,8 +49,8 @@ public class main extends Application {
         CameraMonitor cameraMonitor = new CameraMonitor();
         SyncThread syncThread = new SyncThread(cameraMonitor,spTest);
         syncThread.start();
-        cameraMonitor.connectCamera("argus-3" , 6666);
-        cameraMonitor.connectCamera("argus-5" , 6666);
+        cameraMonitor.connectCamera("argus-2" , 6666);
+        cameraMonitor.connectCamera("argus-4" , 6666);
 
         //cameraMonitor.connectCamera("127.0.0.1" , 5000);
 

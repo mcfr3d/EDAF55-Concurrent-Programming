@@ -26,7 +26,7 @@ public class InputThread extends Thread {
         try {
             DataInputStream inputStream = new DataInputStream(socket.getInputStream());
             while (true) {
-                ImageModel imageModel = fetchImage(new DataInputStream(socket.getInputStream()));
+                ImageModel imageModel = fetchImage(inputStream);
                 cameraMonitor.addImage(this.hashCode(), imageModel);
 
             }

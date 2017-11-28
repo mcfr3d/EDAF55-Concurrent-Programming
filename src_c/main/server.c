@@ -464,6 +464,7 @@ void* serve_client(void *ctxt)
       if( !client->cam || (cres=try_get_frame(client))) {
           printf("ERROR getting frame from camera: %d\n",cres);
       }
+
     }
 
     return (void*) (intptr_t) close(client->connfd);
