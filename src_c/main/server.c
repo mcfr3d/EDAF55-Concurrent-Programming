@@ -20,7 +20,7 @@ long long current_timestamp() {
 } 
 
 #define USE_CAMERA
-#define DEBUG
+//#define DEBUG
 //#define INFO
 
 #define BUFSIZE 50000
@@ -42,6 +42,7 @@ struct client{
     int  connfd;
     byte sendBuff[BUFSIZE];
     byte recvBuff[RECVSIZE];
+    int running;
 #ifdef USE_CAMERA
     camera* cam;
     byte* frame_data;
@@ -74,6 +75,7 @@ void signal_to_bg_task();
 int is_running(struct global_state* state);
 int serve_clients(struct global_state* state);
 int create_sleep_thread(struct global_state* state);
+int client_running(struct client* client);
 
 /////////////// camera stuff
 
@@ -247,16 +249,20 @@ void server_quit(struct global_state* s)
 void set_mode(struct global_state* s, mode_t mode)
 {
     pthread_mutex_lock(&global_mutex);
+    printf("Old mode: %d\n", s->mode);
+
     printf("Old mode: %s\n", modeNames[s->mode]);
     s->mode = mode;
     printf("New mode: %s\n", modeNames[s->mode]);
-  
+ /* 
     if(s->mode == IDLE) {
       printf("Trying to create sleep thread\n");
       int res = create_sleep_thread(s);
       printf("Creating sleep thread result: %i\n",res);    
     }
     else pthread_cond_broadcast(&global_cond);
+*/
+    pthread_cond_broadcast(&global_cond);
     pthread_mutex_unlock(&global_mutex);
 
 }
@@ -320,7 +326,8 @@ void* sleep_task(void *ctxt)
   struct global_state* s = ctxt;
 
   pthread_mutex_lock(&global_mutex);
-  printf("In sleep task\n");
+  printf("In sleep task,thread id : %lu\n",pthread_self());
+/*
   while(s->running && s->mode == IDLE){
       pthread_mutex_unlock(&global_mutex);
       printf("Sleeping...\n");
@@ -330,7 +337,22 @@ void* sleep_task(void *ctxt)
       pthread_mutex_lock(&global_mutex);
       pthread_cond_broadcast(&global_cond);
   }
-  printf("Done with sleep task\n");
+*/
+  while(s->running){
+      mode_t mode = s->mode;
+      pthread_mutex_unlock(&global_mutex);
+
+      if(mode == IDLE) {
+         sleep(IDLE_DELAY); 
+         pthread_mutex_lock(&global_mutex);
+         pthread_cond_broadcast(&global_cond);
+      } else { // Movie
+         pthread_mutex_lock(&global_mutex);
+         pthread_cond_wait(&global_cond, &global_mutex);
+      }
+      
+  }
+  printf("Done with sleep task,thread id : %lu\n",pthread_self());
   pthread_mutex_unlock(&global_mutex);
   return 0;
 }
@@ -375,6 +397,9 @@ int try_accept(struct global_state* state, struct client* client)
     if(client->connfd < 0) {
         result = errno;
     } else {
+        pthread_mutex_lock(&global_mutex);
+        client->running = 1;
+        pthread_mutex_unlock(&global_mutex);
 #ifdef INFO
 	printf("accepted connection\n");
 	printf("connfd: %i\n",client->connfd);
@@ -432,10 +457,10 @@ void* serve_client(void *ctxt)
     struct serve_args* args = ctxt;
     struct client* client = args->client;
     struct global_state* state = args->state;
-    int cres = 0;
-    while(is_running(state) && cres < 2) {
+    while(is_running(state) && client_running(client)) {
       delay_if_idle(state);
       memset(client->sendBuff, 0, sizeof(client->sendBuff));
+      int cres = 0;
       if( !client->cam || (cres=try_get_frame(client))) {
           printf("ERROR getting frame from camera: %d\n",cres);
       }
@@ -461,13 +486,16 @@ void* read_input(void *ctxt)
 		// Shut down
 	    } else {
 	        byte mode_status = client->recvBuff[1];
-		mode_t mode = mode_status & 0xFF;
+		mode_t mode = (mode_status & 0xFF) == 255 ? MOVIE : IDLE;
 		set_mode(state, mode);
 	    }
         }
     }
 
-    return (void*) (intptr_t) close(client->connfd);
+    pthread_mutex_lock(&global_mutex);
+    client->running = 0;
+    pthread_mutex_unlock(&global_mutex);
+    return 0;
 }
 
 /*
@@ -532,6 +560,7 @@ static void client_init(struct client* client)
 {
     client->cam=NULL;
     client->connfd=-1;
+    client->running =0;
 }
 int serve_clients(struct global_state* state)
 {    
@@ -568,6 +597,15 @@ void init_global_state(struct global_state* state)
     state->cam=NULL;
     state->mode = IDLE;
     pthread_mutex_unlock(&global_mutex);
+}
+
+int client_running(struct client* client)
+{
+    int result=0;
+    pthread_mutex_lock(&global_mutex);
+    result =  client->running;
+    pthread_mutex_unlock(&global_mutex);
+    return result;
 }
 
 int is_running(struct global_state* state)

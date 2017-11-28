@@ -8,6 +8,9 @@
 *.iml
 *.iws
 
+#Bin C
+bin_c/
+
 # Mac
 .DS_Store
 
@@ -94,3 +97,5 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+

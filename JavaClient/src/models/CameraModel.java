@@ -32,7 +32,6 @@ public class CameraModel {
                 return;
             }
         }
-        if(!imageBuffer.isEmpty()) System.out.println("DIFF: " + (image.getTimeStamp() - imageBuffer.peek().getTimeStamp()));
         imageBuffer.addLast(image);
     }
 

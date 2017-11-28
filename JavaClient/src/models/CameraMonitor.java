@@ -2,6 +2,7 @@ package models;
 
 import javafx.scene.image.Image;
 import threads.InputThread;
+import threads.MotionListener;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -27,11 +28,13 @@ public class CameraMonitor {
         return alive;
     }
 
-    synchronized public void connectCamera(String ip , int port){
+    synchronized public void connectCamera(String address , int port){
         try {
-            Socket socket = new Socket(ip, port);
+            Socket socket = new Socket(address, port);
             InputThread inputThread = new InputThread(socket, this);
-            cameraMap.put(inputThread.hashCode(),new CameraModel(ip,port));
+            MotionListener motionListener = new MotionListener(this,address);
+            cameraMap.put(inputThread.hashCode(),new CameraModel(address,port));
+            motionListener.start();
             inputThread.start();
         }catch(IOException e){
             //Couldnt connect
@@ -72,25 +75,28 @@ public class CameraMonitor {
     private long longestDiff(){
         long longestDiff = 0;
         ArrayList<CameraModel> cameraModels =  new ArrayList<>(cameraMap.values());
-        /*for(int n = 0 ; n < cameraMap.values().size() ; n++){
-            for(int m = n+1 ; m < cameraMap.values().size() ; m++){
-                if(cameraModels.get(n).hasImage() && cameraModels.get(m).hasImage()) {
-                    long diff = cameraModels.get(n).peekImage().getTimeStamp() - cameraModels.get(m).peekImage().getTimeStamp();
-                    diff = Math.abs(diff)/1000000;
-                    System.out.println(diff);
-                    if (diff > longestDiff) {
-                        longestDiff = diff;
+        if(allHasImage()){
+            for(int n = 0 ; n < cameraMap.values().size() ; n++){
+                for(int m = n+1 ; m < cameraMap.values().size() ; m++){
+                    if(cameraModels.get(n).hasImage() && cameraModels.get(m).hasImage()) {
+                        long diff = cameraModels.get(n).peekImage().getTimeStamp() - cameraModels.get(m).peekImage().getTimeStamp();
+                        diff = Math.abs(diff)/1000000;
+                        if (diff > longestDiff) {
+                            longestDiff = diff;
+                        }
                     }
                 }
             }
-        }*/
-        //return longestDiff;
-        if(cameraModels.get(0).hasImage() && cameraModels.get(1).hasImage()){
-            return Math.abs(cameraModels.get(0).peekImage().getTimeStamp() - cameraModels.get(1).peekImage().getTimeStamp());
+            return longestDiff;
+
+        }else{
+            return Long.MAX_VALUE;
         }
-        return Long.MAX_VALUE;
+
+
     }
     synchronized public ArrayList<Map.Entry<Integer,ImageModel>> getImage(){
+
         ArrayList<Map.Entry<Integer,ImageModel>> imageList  = new ArrayList<>();
         while(!anyHasImages() ){
             try {
@@ -105,7 +111,6 @@ public class CameraMonitor {
                 if(entry.getValue().hasImage()){
                     //En har bild.
                     while(!allHasImage()){
-                        System.out.println("ALL HAS");
                         try {
                             long currentTime = System.currentTimeMillis();
 
@@ -123,7 +128,6 @@ public class CameraMonitor {
 
                         }
                     }
-                    System.out.println(allHasImage());
                     if(longestDiff() > 200 ){
                         sync = false;
                     }
@@ -138,7 +142,7 @@ public class CameraMonitor {
             }
         }else{ //ASYNC
 
-            if(allHasImage() && longestDiff() <= 200){
+            if(longestDiff() <= 200){
                 sync = true;
             }
             for(Map.Entry<Integer,CameraModel> entryToArray :cameraMap.entrySet()){
