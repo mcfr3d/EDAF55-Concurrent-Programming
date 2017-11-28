@@ -4,6 +4,7 @@ import constants.Constants;
 import javafx.scene.image.Image;
 import threads.InputThread;
 import threads.MotionListener;
+import threads.OutputThread;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -25,11 +26,25 @@ public class CameraMonitor {
     public CameraMonitor(){
         cameraMap = new HashMap<>();
         activeSockets = new ArrayList<>();
+        OutputThread outputThread = new OutputThread(this);
+        outputThread.start();
     }
 
+    synchronized public ArrayList<Socket> getActiveSockets() {
+        return (ArrayList<Socket>)activeSockets.clone();
+    }
+    synchronized public int getMotionModeMotion() {
+        while(forceMode != Constants.MotionMode.AUTO){
+            try {
+                wait();
+            } catch (InterruptedException e) {
 
-    synchronized public int getMotionMode() {
-        while(forceMode != Constants.MotionMode.AUTO || motionModeChanged){
+            }
+        }
+        return motionMode;
+    }
+    synchronized public int getMotionModeOutput() {
+        while(!motionModeChanged){
             try {
                 wait();
             } catch (InterruptedException e) {

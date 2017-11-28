@@ -29,7 +29,7 @@ public class MotionListener extends Thread {
     public void run() {
         //TODO Kill on disconnect
         while (cameraMonitor.isAlive()) {
-            int currentMode = cameraMonitor.getMotionMode();
+            int currentMode = cameraMonitor.getMotionModeMotion();
             String urlStr = "http://" + this.address + ":" + this.port;
             try {
                 URL url = new URL(urlStr);
@@ -43,12 +43,13 @@ public class MotionListener extends Thread {
                 in.close();
 
                 String response = stringBuilder.toString();
-                Float[] responseTime = Arrays.stream(response.split(":"))
-                        .map((time) -> Float.valueOf(time))
-                        .toArray(Float[]::new);
-
-                float timeSinceMotion = responseTime[2];
-                if(System.currentTimeMillis() - timeSinceMotion > 10000 && currentMode != Constants.MotionMode.IDLE){
+                Long[] responseTime = Arrays.stream(response.split(":"))
+                        .map((time) -> Long.valueOf(time))
+                        .toArray(Long[]::new);
+                System.out.println(response);
+                long timeSinceMotion = responseTime[2]*1000; //responsetime is in seconds orginally
+                System.out.println("DIFF: " + (System.currentTimeMillis() - timeSinceMotion) );
+                if(System.currentTimeMillis() - timeSinceMotion > 60000 && currentMode != Constants.MotionMode.IDLE){
                     cameraMonitor.setMotionMode(Constants.MotionMode.IDLE);
                 }else if(System.currentTimeMillis() - timeSinceMotion < 1500 && currentMode != Constants.MotionMode.MOVIE){
                     cameraMonitor.setMotionMode(Constants.MotionMode.MOVIE);
