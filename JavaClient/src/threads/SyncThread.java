@@ -1,16 +1,12 @@
 package threads;
 
-import components.ImageGridView;
 import components.MainPane;
+import constants.Constants;
 import javafx.util.Pair;
-import models.CameraModel;
 import models.CameraMonitor;
 import models.ImageModel;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 public class SyncThread extends Thread {
     private CameraMonitor cameraMonitor;
@@ -23,10 +19,9 @@ public class SyncThread extends Thread {
 
     @Override
     public void run() {
-        while (cameraMonitor.isAlive()) {
+        while (cameraMonitor.isAlive() && !isInterrupted()) {
             ArrayList<Pair<Integer,ImageModel>> nextImages = cameraMonitor.getImage();
             long previousTimeStamp = 0;
-            int counter = 0;
             boolean first = true;
 
             if(cameraMonitor.isSync()){
@@ -45,21 +40,19 @@ public class SyncThread extends Thread {
                             mainPane.updateImage(imageModel.image,entry.getKey());
 
                         } catch (InterruptedException e) {
-
+                            if(Constants.Flags.DEBUG) System.out.println("SyncThread was interrupted during sleep.\n Terminating SyncThread.");
+                            return;
                         }
                     }
-                    counter ++;
                     previousTimeStamp = imageModel.timeStamp;
-
                 }
-            }else {
+            } else {
                 for (Pair<Integer, ImageModel> entry : nextImages) {
                     ImageModel imageModel = entry.getValue();
                     mainPane.updateImage(imageModel.image, entry.getKey());
-
                 }
             }
         }
-
+        if(Constants.Flags.DEBUG) System.out.println("Terminating SyncThread.");
     }
 }
