@@ -176,7 +176,7 @@ public class CameraMonitor {
         imageList.sort(new Comparator<Pair<Integer, ImageModel>>() {
             @Override
             public int compare(Pair<Integer, ImageModel> o1, Pair<Integer, ImageModel> o2) {
-                return (int) (o1.getValue().getTimeStamp() - o2.getValue().getTimeStamp());
+                return (int) (o1.getValue().timeStamp - o2.getValue().timeStamp);
             }
         });
         return imageList;
