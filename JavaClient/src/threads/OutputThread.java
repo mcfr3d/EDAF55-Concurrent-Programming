@@ -1,6 +1,5 @@
 package threads;
 
-
 import constants.Constants;
 import models.CameraMonitor;
 
@@ -9,8 +8,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 public class OutputThread extends Thread {
-    private static final byte MOVIE = (byte) 0xFF;
-    private static final byte IDLE = 0x00;
 
     private CameraMonitor cameraMonitor;
     public OutputThread(CameraMonitor cameraMonitor) {
@@ -19,27 +16,36 @@ public class OutputThread extends Thread {
 
     @Override
     public void run() {
-        while(cameraMonitor.isAlive()){
+        while(cameraMonitor.isAlive() && !isInterrupted()){
             int currentMotionMode = cameraMonitor.getMotionModeOutput();
             byte code;
             switch (currentMotionMode){
                 case Constants.MotionMode.IDLE:
-                    code = IDLE;
+                    code = Constants.MotionCode.IDLE;
                     break;
                 case Constants.MotionMode.MOVIE:
-                    code = MOVIE;
+                    code = Constants.MotionCode.MOVIE;
                     break;
                 default:
                     continue;
             }
+
+            // Broadcast the newly set mode to all cameras
             for(Socket socket : cameraMonitor.getActiveSockets()){
+                OutputStream os = null;
                 try {
-                    OutputStream os = socket.getOutputStream();
+                    os = socket.getOutputStream();
+                    // Might do something in the future with the first byte
                     os.write(0x00);
                     os.write(code);
-
                 } catch (IOException e) {
-
+                    if(Constants.Flags.DEBUG) System.out.println("OutputStream in OutputThread caused IOException.");
+                } finally {
+                    try {
+                        if(os != null) os.close();
+                    } catch(IOException e) {
+                        if(Constants.Flags.DEBUG) System.out.println("OutputStream in OutputThread already closed.");
+                    }
                 }
 
             }
