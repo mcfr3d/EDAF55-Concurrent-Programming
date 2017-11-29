@@ -1,7 +1,5 @@
 package threads;
 
-
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 import constants.Constants;
 import models.CameraMonitor;
 
@@ -16,54 +14,84 @@ import java.util.Arrays;
 public class MotionListener extends Thread {
     private CameraMonitor cameraMonitor;
     private String address;
-    private static final int port = 9091;
-    private long latestMotion;
+    private static final int PORT = 9091;
+    private static final int IDLE_THRESHOLD = 60000; // 60 seconds
+    private static final int MOVIE_THRESHOLD = 1500; // 1.5 seconds
+    private static final int DELAY = 500; // 0.5 seconds
 
-    public MotionListener(CameraMonitor cameraMonitor,String address) {
+    public MotionListener(CameraMonitor cameraMonitor, String address) {
         this.cameraMonitor = cameraMonitor;
         this.address = address;
-
     }
 
     @Override
     public void run() {
         //TODO Kill on disconnect
-        while (cameraMonitor.isAlive()) {
+        while (cameraMonitor.isAlive() && !isInterrupted()) {
             int currentMode = cameraMonitor.getMotionModeMotion();
-            String urlStr = "http://" + this.address + ":" + this.port;
+            String urlStr = "http://" + this.address + ":" + MotionListener.PORT;
+
+            // Fetching URL
+            URL url = null;
             try {
-                URL url = new URL(urlStr);
+                url = new URL(urlStr);
+            } catch (MalformedURLException e) {
+                // TODO: Inform user that motion server disconnected
+                if(Constants.Flags.DEBUG) System.out.println("URL: " + urlStr + " does not exist.\n" +
+                        "Terminating MotionListener");
+                return;
+            }
+
+            // Reading input
+            StringBuilder stringBuilder = new StringBuilder();
+            BufferedReader in = null;
+            try {
                 URLConnection conn = url.openConnection();
-                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
                 String inputLine;
-                StringBuilder stringBuilder = new StringBuilder();
                 while ((inputLine = in.readLine()) != null){
                     stringBuilder.append(inputLine);
                 }
-                in.close();
-
-                String response = stringBuilder.toString();
-                Long[] responseTime = Arrays.stream(response.split(":"))
-                        .map((time) -> Long.valueOf(time))
-                        .toArray(Long[]::new);
-                System.out.println(response);
-                long timeSinceMotion = responseTime[2]*1000; //responsetime is in seconds orginally
-                System.out.println("DIFF: " + (System.currentTimeMillis() - timeSinceMotion) );
-                if(System.currentTimeMillis() - timeSinceMotion > 60000 && currentMode != Constants.MotionMode.IDLE){
-                    cameraMonitor.setMotionMode(Constants.MotionMode.IDLE);
-                }else if(System.currentTimeMillis() - timeSinceMotion < 1500 && currentMode != Constants.MotionMode.MOVIE){
-                    cameraMonitor.setMotionMode(Constants.MotionMode.MOVIE);
-                }
-
-            } catch (MalformedURLException e) {
-                //TODO MALLFORM URL
             } catch (IOException e) {
-
+                if(Constants.Flags.DEBUG) System.out.println("BufferedReader in MotionListener caused IOException.\n" +
+                        "Terminating MotionListener.");
+                return;
+            } finally {
+                try {
+                    if(in != null) in.close();
+                } catch(IOException e) {
+                    if(Constants.Flags.DEBUG) System.out.println("BufferedReader in MotionListener already closed.");
+                }
             }
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
 
+            String response = stringBuilder.toString();
+            Long[] responseTime = Arrays.stream(response.split(":"))
+                    .map(Long::valueOf)
+                    .toArray(Long[]::new);
+
+            // Setting motion mode for a given response
+            long timeSinceMotion = responseTime[2]*1000; // Response time is in seconds originally
+            long diff = System.currentTimeMillis() - timeSinceMotion;
+
+            switch(currentMode) {
+                case Constants.MotionMode.IDLE:
+                    if(diff < MotionListener.MOVIE_THRESHOLD) cameraMonitor.setMotionMode(Constants.MotionMode.MOVIE);
+                    break;
+                case Constants.MotionMode.MOVIE:
+                    if(diff > MotionListener.IDLE_THRESHOLD) cameraMonitor.setMotionMode(Constants.MotionMode.IDLE);
+                    break;
+                default:
+                    continue;
+            }
+
+            // Delay 500ms
+            try {
+                Thread.sleep(MotionListener.DELAY);
+            } catch (InterruptedException e) {
+                if(Constants.Flags.DEBUG) System.out.println("MotionListener was interrupted during sleep.\n " +
+                        "Terminating MotionListener.");
+                return;
             }
         }
     }
