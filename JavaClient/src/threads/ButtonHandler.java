@@ -1,6 +1,7 @@
 package threads;
 
 import actions.Action;
+import constants.Constants;
 import models.ButtonMonitor;
 import models.CameraMonitor;
 
@@ -17,9 +18,10 @@ public class ButtonHandler extends Thread {
 
     @Override
     public void run() {
-        while(cameraMonitor.isAlive()){
+        while(cameraMonitor.isAlive() && !isInterrupted()){
             Action action = buttonMonitor.getAction();
             action.execute(cameraMonitor);
         }
+        if(isInterrupted() && Constants.Flags.DEBUG) System.out.println("ButtonHandler was terminated");
     }
 }

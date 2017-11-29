@@ -1,6 +1,7 @@
 package models;
 
 import actions.Action;
+import constants.Constants;
 
 import java.util.LinkedList;
 
@@ -17,7 +18,9 @@ public class ButtonMonitor{
             try {
                 wait();
             } catch (InterruptedException e) {
-
+                Thread.currentThread().interrupt();
+                if(Constants.Flags.DEBUG) System.out.println("ButtonHandler interrupted, terminating handler.");
+                return null;
             }
         }
         return actionList.poll();
