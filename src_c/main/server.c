@@ -216,9 +216,13 @@ void delay_if_idle(struct global_state* s)
 {
   pthread_mutex_lock(&global_mutex);
   if(s->mode == IDLE) {
+#ifdef INFO
     printf("Waiting...\n");
+#endif
     pthread_cond_wait(&global_cond, &global_mutex);
+#ifdef INFO
     printf("Done waiting.\n");
+#endif
   }
   pthread_mutex_unlock(&global_mutex);
 }
@@ -326,7 +330,9 @@ void* sleep_task(void *ctxt)
   struct global_state* s = ctxt;
 
   pthread_mutex_lock(&global_mutex);
+#ifdef DEBUG
   printf("In sleep task,thread id : %lu\n",pthread_self());
+#endif
 /*
   while(s->running && s->mode == IDLE){
       pthread_mutex_unlock(&global_mutex);
@@ -352,7 +358,9 @@ void* sleep_task(void *ctxt)
       }
       
   }
+#ifdef DEBUG
   printf("Done with sleep task,thread id : %lu\n",pthread_self());
+#endif
   pthread_mutex_unlock(&global_mutex);
   return 0;
 }
