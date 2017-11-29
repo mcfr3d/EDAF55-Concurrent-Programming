@@ -32,29 +32,28 @@ public class SyncThread extends Thread {
                 for(Map.Entry<Integer,ImageModel> entry : nextImages){
                     ImageModel imageModel = entry.getValue();
                     if(first){
-                        imageGridView.updateImage(imageModel.image,entry.getKey());
+                        imageGridView.updateImage(imageModel.getImage(),entry.getKey());
                         first = false;
                     }
                     else{
                         try {
 
-                            long diff = (imageModel.timeStamp - previousTimeStamp);
+                            long diff = (imageModel.getTimeStamp() - previousTimeStamp);
                             Thread.sleep(diff);
-                            //System.out.println(diff);
-                            imageGridView.updateImage(imageModel.image,entry.getKey());
+                            imageGridView.updateImage(imageModel.getImage(),entry.getKey());
 
                         } catch (InterruptedException e) {
 
                         }
                     }
                     counter ++;
-                    previousTimeStamp = imageModel.timeStamp;
+                    previousTimeStamp = imageModel.getTimeStamp();
 
                 }
             }else {
                 for (Map.Entry<Integer, ImageModel> entry : nextImages) {
                     ImageModel imageModel = entry.getValue();
-                    imageGridView.updateImage(imageModel.image, entry.getKey());
+                    imageGridView.updateImage(imageModel.getImage(), entry.getKey());
 
                 }
             }

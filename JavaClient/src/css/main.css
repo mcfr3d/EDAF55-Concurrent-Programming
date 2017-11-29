@@ -1,5 +1,5 @@
 .camera-button{
-    -fx-background-color:#9372FF;
+    -fx-background-color:#2B35E4;
     -fx-background-radius: 50px;
     -fx-border-radius: 50px;
     -fx-padding: 4px 8px;
@@ -12,7 +12,7 @@
 
 }
 .add-button{
-    -fx-background-color:#9372FF;
+    -fx-background-color:#2B35E4;
     -fx-background-radius: 50000px;
     -fx-border-radius: 100px;
     -fx-padding: 4px 8px;
@@ -27,7 +27,7 @@
 }
 .multiple-choice{
     -fx-background-radius: 50px;
-    -fx-background-color:#B29AFF;
+    -fx-background-color:#4752E8;
     -fx-max-height:33px;
     -fx-min-height:33px;
 
@@ -49,7 +49,7 @@
 
 }
 .choice.active{
-    -fx-background-color:#9372FF;
+    -fx-background-color:#2B35E4;
     -fx-opacity:1;
 
 }

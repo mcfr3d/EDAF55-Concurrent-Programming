@@ -33,6 +33,13 @@ public class MultipleChoiceView extends HBox {
         for(Choice choice : choiceList){
             choice.setOnMouseClicked(event -> {
                 this.fireEvent(new MultipleChoiceEvent(MultipleChoiceEvent.MULTIPLE_CHOICE_EVENT,choice.getValue()));
+                for(Choice otherChoice: choiceList){
+                    if(otherChoice.equals(choice)){
+                        otherChoice.setActive(true);
+                    }else{
+                        otherChoice.setActive(false);
+                    }
+                }
             });
             getChildren().add(choice);
         }
