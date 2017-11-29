@@ -22,7 +22,7 @@ public class CameraModel {
     public void putImage(ImageModel image) {
         ListIterator itr = imageBuffer.listIterator();
         while(itr.hasNext()){
-            if(image.getTimeStamp() < ((ImageModel)itr.next()).getTimeStamp()){
+            if(image.timeStamp < ((ImageModel)itr.next()).timeStamp){
                 if(itr.hasPrevious()){
                     itr.previous();
                     itr.add(image);

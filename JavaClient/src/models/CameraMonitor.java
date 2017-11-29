@@ -136,7 +136,7 @@ public class CameraMonitor {
             for(int n = 0 ; n < cameraMap.values().size() ; n++){
                 for(int m = n+1 ; m < cameraMap.values().size() ; m++){
                     if(cameraModels.get(n).hasImage() && cameraModels.get(m).hasImage()) {
-                        long diff = cameraModels.get(n).peekImage().getTimeStamp() - cameraModels.get(m).peekImage().getTimeStamp();
+                        long diff = cameraModels.get(n).peekImage().timeStamp - cameraModels.get(m).peekImage().timeStamp;
                         diff = Math.abs(diff)/1000000;
                         if (diff > longestDiff) {
                             longestDiff = diff;
@@ -214,7 +214,7 @@ public class CameraMonitor {
         imageList.sort(new Comparator<Map.Entry<Integer, ImageModel>>() {
             @Override
             public int compare(Map.Entry<Integer, ImageModel> o1, Map.Entry<Integer, ImageModel> o2) {
-                return (int) (o1.getValue().getTimeStamp() - o2.getValue().getTimeStamp());
+                return (int) (o1.getValue().timeStamp - o2.getValue().timeStamp);
             }
         });
         return imageList;
