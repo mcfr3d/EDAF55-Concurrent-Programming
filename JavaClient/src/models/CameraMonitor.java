@@ -102,7 +102,7 @@ public class CameraMonitor {
             forceIdle(socket);
             InputThread inputThread = new InputThread(socket, this); //ERROR
             MotionListener motionListener = new MotionListener(this,address); //ERROR
-            cameraMap.put(key,new CameraModel(address,port));
+            cameraMap.put(key,new CameraModel());
             motionListener.start(); //ERRROR
             inputThread.start(); //ERROR
         }catch(IOException e){
