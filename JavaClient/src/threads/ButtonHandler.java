@@ -20,6 +20,7 @@ public class ButtonHandler extends Thread {
     public void run() {
         while(cameraMonitor.isAlive() && !isInterrupted()){
             Action action = buttonMonitor.getAction();
+            if(Constants.Flags.DEBUG) System.out.println("Polled action: " + action.toString());
             action.execute(cameraMonitor);
         }
         if(isInterrupted() && Constants.Flags.DEBUG) System.out.println("ButtonHandler was terminated");

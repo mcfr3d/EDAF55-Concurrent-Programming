@@ -28,6 +28,7 @@ public class ButtonMonitor{
 
     synchronized public void addAction(Action action){
         actionList.addLast(action);
+        if(Constants.Flags.DEBUG) System.out.println("Added action: " + action.toString());
         notifyAll();
     }
 
