@@ -1,6 +1,7 @@
 package threads;
 
 import components.ImageGridView;
+import javafx.util.Pair;
 import models.CameraModel;
 import models.CameraMonitor;
 import models.ImageModel;
@@ -22,14 +23,14 @@ public class SyncThread extends Thread {
     @Override
     public void run() {
         while (cameraMonitor.isAlive()) {
-            ArrayList<Map.Entry<Integer,ImageModel>> nextImages = cameraMonitor.getImage();
+            ArrayList<Pair<Integer,ImageModel>> nextImages = cameraMonitor.getImage();
             long previousTimeStamp = 0;
             int counter = 0;
             boolean first = true;
 
             if(cameraMonitor.isSync()){
 
-                for(Map.Entry<Integer,ImageModel> entry : nextImages){
+                for(Pair<Integer,ImageModel> entry : nextImages){
                     ImageModel imageModel = entry.getValue();
                     if(first){
                         imageGridView.updateImage(imageModel.getImage(),entry.getKey());
@@ -40,7 +41,6 @@ public class SyncThread extends Thread {
 
                             long diff = (imageModel.getTimeStamp() - previousTimeStamp);
                             Thread.sleep(diff);
-                            //System.out.println(diff);
                             imageGridView.updateImage(imageModel.getImage(),entry.getKey());
 
                         } catch (InterruptedException e) {
@@ -52,7 +52,7 @@ public class SyncThread extends Thread {
 
                 }
             }else {
-                for (Map.Entry<Integer, ImageModel> entry : nextImages) {
+                for (Pair<Integer, ImageModel> entry : nextImages) {
                     ImageModel imageModel = entry.getValue();
                     imageGridView.updateImage(imageModel.getImage(), entry.getKey());
 
