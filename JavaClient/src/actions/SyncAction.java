@@ -14,4 +14,9 @@ public class SyncAction extends Action {
     public void op(CameraMonitor monitor) {
         monitor.setForceMode(code);
     }
+
+    @Override
+    public String toString() {
+        return "SyncAction with code: " + code + ".";
+    }
 }

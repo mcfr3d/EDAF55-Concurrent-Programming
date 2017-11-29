@@ -23,4 +23,9 @@ public class ConnectAction extends Action {
     public void op(CameraMonitor monitor) {
         monitor.connectCamera(address , port , key);
     }
+
+    @Override
+    public String toString() {
+        return "ConnectAction with address: " + address + ", port: " + port + " and key: " + key + ".";
+    }
 }
