@@ -1,15 +1,17 @@
 package components;
 
+import javafx.event.Event;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 public class MultipleChoiceView extends HBox {
-    public MultipleChoiceView(String[] choices){
+    public MultipleChoiceView(Map.Entry<Integer,String>[] choices){
         this(choices,0);
     }
-    public MultipleChoiceView(String[] choices , int active){
+    public MultipleChoiceView(Map.Entry<Integer,String>[] choices , int active){
         setMinWidth(75*choices.length);
         setMaxWidth(75*choices.length);
         getStyleClass().add("multiple-choice");
@@ -21,8 +23,8 @@ public class MultipleChoiceView extends HBox {
         ArrayList<Choice> choiceList = new ArrayList<>();
 
         for(int n = 0 ; n < choices.length ; n++){
-            String c = choices[n];
-            Choice choice = new Choice(c);
+            Map.Entry<Integer,String> entry = choices[n];
+            Choice choice = new Choice(entry.getValue() , entry.getKey());
             choiceList.add(choice);
             if(n == active){
                 choice.setActive(true);
@@ -30,13 +32,7 @@ public class MultipleChoiceView extends HBox {
         }
         for(Choice choice : choiceList){
             choice.setOnMouseClicked(event -> {
-                for(Choice otherChoice : choiceList){
-                    if(choice != otherChoice){
-                        otherChoice.setActive(false);
-                    }else{
-                        otherChoice.setActive(true);
-                    }
-                }
+                this.fireEvent(new MultipleChoiceEvent(MultipleChoiceEvent.MULTIPLE_CHOICE_EVENT,choice.getValue()));
             });
             getChildren().add(choice);
         }

@@ -28,7 +28,6 @@ public class SyncThread extends Thread {
             boolean first = true;
 
             if(cameraMonitor.isSync()){
-                System.out.println("N-SYNC");
 
                 for(Map.Entry<Integer,ImageModel> entry : nextImages){
                     ImageModel imageModel = entry.getValue();
@@ -39,11 +38,10 @@ public class SyncThread extends Thread {
                     else{
                         try {
 
-                        long diff = (imageModel.getTimeStamp() - previousTimeStamp);
-                        Thread.sleep(diff);
-                        System.out.println(diff);
-                        //System.out.println(diff);
-                        imageGridView.updateImage(imageModel.getImage(),entry.getKey());
+                            long diff = (imageModel.getTimeStamp() - previousTimeStamp);
+                            Thread.sleep(diff);
+                            //System.out.println(diff);
+                            imageGridView.updateImage(imageModel.getImage(),entry.getKey());
 
                         } catch (InterruptedException e) {
 
@@ -54,7 +52,6 @@ public class SyncThread extends Thread {
 
                 }
             }else {
-                System.out.println("NOSYNC");
                 for (Map.Entry<Integer, ImageModel> entry : nextImages) {
                     ImageModel imageModel = entry.getValue();
                     imageGridView.updateImage(imageModel.getImage(), entry.getKey());
