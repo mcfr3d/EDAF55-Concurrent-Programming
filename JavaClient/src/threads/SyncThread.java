@@ -1,6 +1,7 @@
 package threads;
 
 import components.ImageGridView;
+import components.MainPane;
 import javafx.util.Pair;
 import models.CameraModel;
 import models.CameraMonitor;
@@ -13,11 +14,11 @@ import java.util.Map;
 
 public class SyncThread extends Thread {
     private CameraMonitor cameraMonitor;
-    private ImageGridView imageGridView;
+    private MainPane mainPane;
 
-    public SyncThread(CameraMonitor cameraMonitor, ImageGridView imageGridView) {
+    public SyncThread(CameraMonitor cameraMonitor, MainPane mainPane) {
         this.cameraMonitor = cameraMonitor;
-        this.imageGridView = imageGridView;
+        this.mainPane = mainPane;
     }
 
     @Override
@@ -33,7 +34,7 @@ public class SyncThread extends Thread {
                 for(Pair<Integer,ImageModel> entry : nextImages){
                     ImageModel imageModel = entry.getValue();
                     if(first){
-                        imageGridView.updateImage(imageModel.image,entry.getKey());
+                        mainPane.updateImage(imageModel.image,entry.getKey());
                         first = false;
                     }
                     else{
@@ -41,7 +42,7 @@ public class SyncThread extends Thread {
 
                             long diff = (imageModel.timeStamp - previousTimeStamp);
                             Thread.sleep(diff);
-                            imageGridView.updateImage(imageModel.image,entry.getKey());
+                            mainPane.updateImage(imageModel.image,entry.getKey());
 
                         } catch (InterruptedException e) {
 
@@ -54,7 +55,7 @@ public class SyncThread extends Thread {
             }else {
                 for (Pair<Integer, ImageModel> entry : nextImages) {
                     ImageModel imageModel = entry.getValue();
-                    imageGridView.updateImage(imageModel.image, entry.getKey());
+                    mainPane.updateImage(imageModel.image, entry.getKey());
 
                 }
             }
