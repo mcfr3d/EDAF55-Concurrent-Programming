@@ -9,4 +9,9 @@ public class ImageModel {
         this.image = image;
         this.timeStamp = timeStamp;
     }
+
+    @Override
+    public String toString() {
+        return "Image with timestamp: " + timeStamp;
+    }
 }
