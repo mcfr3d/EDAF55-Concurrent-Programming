@@ -1,5 +1,10 @@
 package constants;
 public class Constants {
+
+    public static class Flags{
+        public static final boolean DEBUG = false;
+    }
+
     public static class MotionMode {
         public static final int AUTO = 0;
         public static final int MOVIE = 1;
