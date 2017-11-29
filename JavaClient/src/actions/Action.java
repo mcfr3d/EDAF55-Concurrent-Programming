@@ -1,15 +1,11 @@
 package actions;
 
+import models.CameraMonitor;
 
 public abstract class Action{
-
-    private int action;
-
-    public Action(int action){
-        this.action = action;
+    public void execute(CameraMonitor monitor) {
+        op(monitor);
     }
 
-    public int getAction() {
-        return action;
-    }
+    abstract void op(CameraMonitor monitor);
 }

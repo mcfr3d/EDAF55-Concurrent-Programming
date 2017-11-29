@@ -1,16 +1,17 @@
 package actions;
 
-import actions.Action;
-import constants.Constants;
+import models.CameraMonitor;
 
 public class SyncAction extends Action {
-    private int code;
+
+    public final int code;
+
     public SyncAction(int code){
-        super(Constants.ActionType.CHANGE_SYNC);
         this.code = code;
     }
 
-    public int getCode() {
-        return code;
+    @Override
+    public void op(CameraMonitor monitor) {
+        monitor.setForceMode(code);
     }
 }

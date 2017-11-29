@@ -1,15 +1,23 @@
 package actions;
 
-import constants.Constants;
+import models.CameraMonitor;
 
 public class ConnectAction extends Action {
-    private String address;
+
+    public final String address;
+    public final int port;
+
     public ConnectAction(String address){
-        super(Constants.ActionType.CONNECT);
-        this.address = address;
+        this(address, 6666);
     }
 
-    public String getAddress() {
-        return address;
+    public ConnectAction(String address, int port) {
+        this.address = address;
+        this.port = port;
+    }
+
+    @Override
+    public void op(CameraMonitor monitor) {
+        monitor.connectCamera(address , port);
     }
 }
