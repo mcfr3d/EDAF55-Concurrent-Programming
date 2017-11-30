@@ -115,6 +115,7 @@ public class CameraMonitor {
     // Used in ConnectAction
     synchronized public void connectCamera(String address , int port, int key){
         Socket socket = null;
+        //Korrekt addres och port
         try {
             socket = new Socket(address, port);
         } catch(IOException e) {
@@ -130,7 +131,7 @@ public class CameraMonitor {
         forceIdle(socket);
 
         // Init camera threads
-        InputThread inputThread = new InputThread(socket, this, key);
+        InputThread inputThread = new InputThread(socket, this , key);
         MotionListener motionListener = new MotionListener(this,address);
         cameraMap.put(key, new CameraModel());
 
@@ -147,12 +148,6 @@ public class CameraMonitor {
             os.write(Constants.MotionCode.IDLE);
         } catch (IOException e) {
             if(Constants.Flags.DEBUG) System.out.println("OutputStream in CameraMonitor caused IOException.");
-        } finally {
-            try {
-                if(os != null) os.close();
-            } catch(IOException e) {
-                if(Constants.Flags.DEBUG) System.out.println("OutputStream in CameraMonitor already closed.");
-            }
         }
     }
 
@@ -203,7 +198,7 @@ public class CameraMonitor {
     private boolean anyHasImages(){
         return cameraMap.values()
                 .stream()
-                .map((camera) -> camera.hasImage())
+                .map(CameraModel::hasImage)
                 .reduce(false,(res,hasImage) -> res || hasImage);
     }
 

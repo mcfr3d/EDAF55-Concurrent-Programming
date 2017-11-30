@@ -58,10 +58,6 @@
    -fx-font-family: "Helvetica" , "Arial";
 
 }
-.combo-box .list-view
-{
-    -fx-pref-width: 70;
-}
 .combo-box-popup .list-view
 {
     -fx-background-color: #4752E8;

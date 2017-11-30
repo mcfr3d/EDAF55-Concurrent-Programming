@@ -40,12 +40,6 @@ public class OutputThread extends Thread {
                     os.write(code);
                 } catch (IOException e) {
                     if(Constants.Flags.DEBUG) System.out.println("OutputStream in OutputThread caused IOException.");
-                } finally {
-                    try {
-                        if(os != null) os.close();
-                    } catch(IOException e) {
-                        if(Constants.Flags.DEBUG) System.out.println("OutputStream in OutputThread already closed.");
-                    }
                 }
 
             }
