@@ -66,7 +66,6 @@ struct global_state {
 };
 
 //int client_write_string(struct client* client);
-unsigned long long reverseBits(unsigned long long num);
 int client_write_n(struct client* client, size_t n);
 void* serve_client(void *ctxt);
 void* read_input(void *ctxt);
@@ -212,7 +211,7 @@ int try_get_frame(struct client* client)
 }
 #endif
 
-void delay_if_idle(struct global_state* s) 
+void delay(struct global_state* s) 
 {
   pthread_mutex_lock(&global_mutex);
   if(s->mode == IDLE) {
@@ -220,6 +219,18 @@ void delay_if_idle(struct global_state* s)
     printf("Waiting...\n");
 #endif
     pthread_cond_wait(&global_cond, &global_mutex);
+#ifdef INFO
+    printf("Done waiting.\n");
+#endif
+  } else {
+    long long currentTime = current_timestamp();
+    struct timespec timeToWait = {0, 0};
+    long long n_seconds = (currentTime + 40) * 1000;
+    timeToWait.tv_nsec = n_seconds;
+#ifdef INFO
+    printf("Waiting. %lli\n", n_seconds);
+#endif
+    pthread_cond_timedwait(&global_cond, &global_mutex, &timeToWait);
 #ifdef INFO
     printf("Done waiting.\n");
 #endif
@@ -466,7 +477,7 @@ void* serve_client(void *ctxt)
     struct client* client = args->client;
     struct global_state* state = args->state;
     while(is_running(state) && client_running(client)) {
-      delay_if_idle(state);
+      delay(state);
       memset(client->sendBuff, 0, sizeof(client->sendBuff));
       int cres = 0;
       if( !client->cam || (cres=try_get_frame(client))) {
