@@ -7,9 +7,11 @@
 .idea/
 *.iml
 *.iws
+JavaClient/out/*
 
 #Bin C
 bin_c/*
+bin_c/.*
 
 # Mac
 .DS_Store
