@@ -43,6 +43,7 @@ public class main extends Application {
 
         syncThread.start();
         buttonHandler.start();
+        primaryStage.show();
 
         primaryStage.widthProperty().addListener((obs, oldVal, newVal) -> {
             mainPane.updateSize(newVal.doubleValue(), mainPane.getHeight() - 100);
@@ -53,7 +54,6 @@ public class main extends Application {
         });
 
 
-        primaryStage.show();
 
     }
 }

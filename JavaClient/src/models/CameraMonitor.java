@@ -130,7 +130,7 @@ public class CameraMonitor {
         forceIdle(socket);
 
         // Init camera threads
-        InputThread inputThread = new InputThread(socket, this);
+        InputThread inputThread = new InputThread(socket, this, key);
         MotionListener motionListener = new MotionListener(this,address);
         cameraMap.put(key, new CameraModel());
 

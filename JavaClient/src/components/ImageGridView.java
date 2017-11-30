@@ -26,29 +26,6 @@ public class ImageGridView extends AnchorPane {
         imageMap = new LinkedHashMap<>();
         updateSize(width, height);
 
-//        im1 = new ImageView();
-//        im2 = new ImageView();
-//        getChildren().addAll(im1, im2);
-//        im1.setFitWidth(width / 2 - 60);
-//        System.out.println("WIDTH: " + width);
-//        im2.setFitWidth(width / 2 - 60);
-//        System.out.println(im2.getFitWidth());
-//        im1.setPreserveRatio(true);
-//        im2.setPreserveRatio(true);
-//        im1.setImage(new Image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9XidFccUPuDXNQ8hin-sc38aGvujcQ6Gi3ZWqryqsD_st6SiNOg"));
-//        Thread t = new Thread(this);
-//        setImageGrid(im1, im2);
-//        t.start();
-
-        /*for(int n = 0 ; n<1 ; n++){
-            ImageView imageView = new ImageView();
-            imageMap.put(n,imageView);
-            imageView.setImage(new Image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9XidFccUPuDXNQ8hin-sc38aGvujcQ6Gi3ZWqryqsD_st6SiNOg"));
-            imageView.setPreserveRatio(true);
-            getChildren().add(imageView);
-        }*/
-
-
     }
 
 
@@ -106,5 +83,14 @@ public class ImageGridView extends AnchorPane {
 
 
         });
+    }
+
+    public void connectCamera(int key) {
+        ImageView imageView = new ImageView();
+        imageView.setPreserveRatio(true);
+        getChildren().add(imageView);
+        System.out.println(getChildren().size());
+        imageMap.put(key, imageView);
+        updateImages(getPrefWidth(), getPrefHeight());
     }
 }

@@ -1,6 +1,5 @@
 package components;
 
-import javafx.event.Event;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Rectangle;
 

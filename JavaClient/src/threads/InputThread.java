@@ -14,11 +14,13 @@ import java.nio.ByteBuffer;
 public class InputThread extends Thread {
 
     private Socket socket;
+    private int key;
     private CameraMonitor cameraMonitor;
 
-    public InputThread(Socket socket, CameraMonitor cameraMonitor) {
+    public InputThread(Socket socket, CameraMonitor cameraMonitor, int key) {
         this.socket = socket;
         this.cameraMonitor = cameraMonitor;
+        this.key = key;
     }
 
     @Override
@@ -29,7 +31,7 @@ public class InputThread extends Thread {
             if(Constants.Flags.DEBUG) System.out.println("DataInputStream in InputThread initialized successfully.");
             while (cameraMonitor.isAlive() && !isInterrupted()) {
                 ImageModel imageModel = fetchImage(inputStream);
-                cameraMonitor.addImage(this.hashCode(), imageModel);
+                cameraMonitor.addImage(key, imageModel);
             }
             if(Constants.Flags.DEBUG) System.out.println("Terminating InputThread.");
 
