@@ -11,10 +11,10 @@ public class MultipleChoiceView extends HBox {
         this(choices,0);
     }
     public MultipleChoiceView(Map.Entry<Integer,String>[] choices , int active){
-        setMinWidth(75*choices.length);
-        setMaxWidth(75*choices.length);
+        setMinWidth(90*choices.length);
+        setMaxWidth(90*choices.length);
         getStyleClass().add("multiple-choice");
-        final Rectangle outputClip = new Rectangle(75*choices.length , 33);
+        final Rectangle outputClip = new Rectangle(90*choices.length , 33);
         outputClip.setArcWidth(33);
         outputClip.setArcHeight(33);
         setClip(outputClip);

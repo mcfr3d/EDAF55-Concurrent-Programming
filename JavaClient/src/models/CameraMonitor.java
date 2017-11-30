@@ -6,6 +6,7 @@ import threads.InputThread;
 import threads.MotionListener;
 import threads.OutputThread;
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -14,7 +15,7 @@ import java.util.*;
 public class CameraMonitor {
 
     private final static int SYNC_THRESHOLD = 200;
-    private HashMap<Integer , CameraModel> cameraMap;
+    private PriorityQueue<Pair<Integer, ImageModel>> buffer;
     private boolean sync = true;
     private boolean forceSync = true;
     private ArrayList<Socket> activeSockets;
@@ -22,9 +23,16 @@ public class CameraMonitor {
     private int motionMode = Constants.MotionMode.IDLE;
     private int forceMode  = Constants.MotionMode.AUTO;
     private boolean alive = true;
+    private HashMap<Integer,Integer> bufferCounter ;
 
     public CameraMonitor(){
-        cameraMap = new HashMap<>();
+        buffer = new PriorityQueue<>(new Comparator<Pair<Integer, ImageModel>>() {
+            @Override
+            public int compare(Pair<Integer, ImageModel> o1, Pair<Integer, ImageModel> o2) {
+                return (int) (o1.getValue().timeStamp - o2.getValue().timeStamp);
+            }
+        });
+        bufferCounter = new HashMap<>();
         activeSockets = new ArrayList<>();
         OutputThread outputThread = new OutputThread(this);
         outputThread.start();
@@ -40,6 +48,13 @@ public class CameraMonitor {
 
     synchronized public boolean isAlive(){
         return alive;
+    }
+
+    private void incrementBufferSize(int key){
+        bufferCounter.put(key, bufferCounter.get(key)+1);
+    }
+    private void decrementBufferSize(int key){
+        bufferCounter.put(key, bufferCounter.get(key)-1);
     }
 
     /*
@@ -128,24 +143,36 @@ public class CameraMonitor {
                 " and port: " + port + ".");
 
         activeSockets.add(socket);
-        forceIdle(socket);
+        forceMode(socket);
 
         // Init camera threads
         InputThread inputThread = new InputThread(socket, this , key);
         MotionListener motionListener = new MotionListener(this,address);
-        cameraMap.put(key, new CameraModel());
 
+        bufferCounter.put(key,0);
         // Start camera threads
-        motionListener.start();
+        //motionListener.start();
         inputThread.start();
     }
-    private void forceIdle(Socket socket){
+    private void forceMode(Socket socket){
         OutputStream os = null;
         try {
+            byte code;
             os = socket.getOutputStream();
             // Might do something in the future with the first byte
             os.write(0x00);
-            os.write(Constants.MotionCode.IDLE);
+            switch (motionMode){
+                case Constants.MotionMode.IDLE:
+                    code = Constants.MotionCode.IDLE;
+                    break;
+                case Constants.MotionMode.MOVIE:
+                    code = Constants.MotionCode.MOVIE;
+                    break;
+                default:
+                    code = Constants.MotionCode.IDLE;
+                    break;
+            }
+            os.write(code);
         } catch (IOException e) {
             if(Constants.Flags.DEBUG) System.out.println("OutputStream in CameraMonitor caused IOException.");
         }
@@ -155,9 +182,10 @@ public class CameraMonitor {
     - InputThread operations
      */
 
-    synchronized public void addImage(int camera, ImageModel imageModel){
-        cameraMap.get(camera).putImage(imageModel);
-        if(Constants.Flags.DEBUG) System.out.println("Added image model: " + imageModel + " from camera: " + camera + ".");
+    synchronized public void addImage(int key, ImageModel imageModel){
+        buffer.add(new Pair<>(key,imageModel));
+        if(Constants.Flags.DEBUG) System.out.println("Added image model: " + imageModel + " from camera: " + key + ".");
+        incrementBufferSize(key);
         notifyAll();
     }
 
@@ -171,9 +199,21 @@ public class CameraMonitor {
         return sync;
     }
 
-    synchronized public ArrayList<Pair<Integer,ImageModel>> getImage(){
-        ArrayList<Pair<Integer,ImageModel>> imageList  = new ArrayList<>();
-        while(!anyHasImages() ){
+    private boolean shouldBeAsync(){
+        return !bufferCounter.values()
+                .stream()
+                .map(size -> size > 0)
+                .reduce(true,(res,hasImage) -> res && hasImage);
+    }
+    private boolean shouldBeSync(long oldestTimeStamp){
+        return  oldestTimeStamp + 400 >= System.currentTimeMillis() &&  bufferCounter.values()
+                .stream()
+                .map((size) -> size > 5)
+                .reduce(true , (res, hasImage) -> res && hasImage);
+    }
+
+    synchronized public Pair<Integer,ImageModel> getImage(){
+        while(buffer.isEmpty()){
             try {
                 wait();
             } catch (InterruptedException e) {
@@ -181,95 +221,53 @@ public class CameraMonitor {
             }
         }
         if(sync && forceSync){
-            getImagesSync(imageList);
+            return getImageSync();
         }else{
-            getImageAsync(imageList);
+            System.out.println("ASYNC");
+            return getImageAsync();
         }
 
-        imageList.sort(new Comparator<Pair<Integer, ImageModel>>() {
-            @Override
-            public int compare(Pair<Integer, ImageModel> o1, Pair<Integer, ImageModel> o2) {
-                return (int) (o1.getValue().timeStamp - o2.getValue().timeStamp);
-            }
-        });
-        return imageList;
     }
 
-    private boolean anyHasImages(){
-        return cameraMap.values()
-                .stream()
-                .map(CameraModel::hasImage)
-                .reduce(false,(res,hasImage) -> res || hasImage);
-    }
 
-    private void getImagesSync(ArrayList<Pair<Integer,ImageModel>> imageList) {
-        for (Map.Entry<Integer, CameraModel> entry : cameraMap.entrySet()) {
-            if (entry.getValue().hasImage()) {
-                while (!allHasImage()) {
-                    try {
-                        long currentTime = System.currentTimeMillis();
 
-                        wait(SYNC_THRESHOLD);
 
-                        if (System.currentTimeMillis() >= currentTime + SYNC_THRESHOLD) {
-                            sync = false; //TODO Fault tolerance
-                            break;
-                        }
-                    } catch (InterruptedException e) {
-                        System.out.println(e.getMessage());
-                        return;
-                    }
-                }
-                if (longestDiff() > SYNC_THRESHOLD) {
-                    sync = false;
-                }
-                for (Map.Entry<Integer, CameraModel> entryToArray : cameraMap.entrySet()) {
-                    if (entryToArray.getValue().hasImage()) {
-                        imageList.add(new Pair<>(entryToArray.getKey(), entryToArray.getValue().getImage()));
-                    }
-                }
-                break;
+    private Pair<Integer, ImageModel> getImageSync(){
+        //TODO MASSOR
+
+        while(buffer.peek().getValue().timeStamp + 400 >= System.currentTimeMillis()){
+            try {
+                long dt = Math.max(buffer.peek().getValue().timeStamp + 400 - System.currentTimeMillis(),0);
+                wait(dt);
+            } catch (InterruptedException e) {
+                //RIP
             }
         }
+        Pair<Integer,ImageModel> image = buffer.poll();
+
+        sync = !shouldBeAsync();
+
+        decrementBufferSize(image.getKey());
+        return image;
+
     }
 
-    private void getImageAsync(ArrayList<Pair<Integer,ImageModel>> imageList){
-        if(longestDiff() <= SYNC_THRESHOLD){
-            sync = true;
-        }
-        for(Map.Entry<Integer,CameraModel> entryToArray :cameraMap.entrySet()){
-            if(entryToArray.getValue().hasImage()) {
-                imageList.add(new Pair<>(entryToArray.getKey(), entryToArray.getValue().getImage()));
+    private Pair<Integer,ImageModel> getImageAsync(){
+        while(buffer.peek().getValue().timeStamp + 200 >= System.currentTimeMillis()){
+            try {
+                long dt = Math.max(buffer.peek().getValue().timeStamp + 200 - System.currentTimeMillis(),0);
+                wait(dt);
+            } catch (InterruptedException e) {
+
             }
         }
+
+        Pair<Integer,ImageModel> image = buffer.poll();
+        sync = shouldBeSync(buffer.peek().getValue().timeStamp);
+        decrementBufferSize(image.getKey());
+        return  image;
+
     }
 
-    private long longestDiff(){
-        long longestDiff = 0;
-        ArrayList<CameraModel> cameraModels =  new ArrayList<>(cameraMap.values());
-        if(allHasImage()){
-            for(int n = 0 ; n < cameraMap.values().size() ; n++){
-                for(int m = n+1 ; m < cameraMap.values().size() ; m++){
-                    if(cameraModels.get(n).hasImage() && cameraModels.get(m).hasImage()) {
-                        long diff = cameraModels.get(n).peekImage().timeStamp - cameraModels.get(m).peekImage().timeStamp;
-                        diff = Math.abs(diff)/1000000;
-                        if (diff > longestDiff) {
-                            longestDiff = diff;
-                        }
-                    }
-                }
-            }
-            return longestDiff;
 
-        } else{
-            return Long.MAX_VALUE;
-        }
-    }
-
-    private boolean allHasImage(){
-        return cameraMap.values()
-                .stream()
-                .map((camera) -> camera.hasImage())
-                .reduce(true,(res,hasImage) -> res && hasImage);
-    }
 }
