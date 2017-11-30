@@ -212,7 +212,7 @@ int try_get_frame(struct client* client)
 }
 #endif
 
-void delay_if_idle(struct global_state* s) 
+void delay(struct global_state* s) 
 {
   pthread_mutex_lock(&global_mutex);
   if(s->mode == IDLE) {
@@ -223,6 +223,13 @@ void delay_if_idle(struct global_state* s)
 #ifdef INFO
     printf("Done waiting.\n");
 #endif
+  } else {
+    long long currentTime = current_timestamp();
+    struct timespec timeToWait;
+    long long seconds = (currentTime/1000) + 5;
+    timeToWait.tv_sec = seconds;
+    timeToWait.tv_nsec = (currentTime - seconds*1000)*1000;
+    pthread_cond_timedwait(&global_cond, &global_mutex, &timeToWait);
   }
   pthread_mutex_unlock(&global_mutex);
 }
@@ -466,7 +473,7 @@ void* serve_client(void *ctxt)
     struct client* client = args->client;
     struct global_state* state = args->state;
     while(is_running(state) && client_running(client)) {
-      delay_if_idle(state);
+      delay(state);
       memset(client->sendBuff, 0, sizeof(client->sendBuff));
       int cres = 0;
       if( !client->cam || (cres=try_get_frame(client))) {
