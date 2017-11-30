@@ -66,7 +66,6 @@ struct global_state {
 };
 
 //int client_write_string(struct client* client);
-unsigned long long reverseBits(unsigned long long num);
 int client_write_n(struct client* client, size_t n);
 void* serve_client(void *ctxt);
 void* read_input(void *ctxt);
@@ -225,11 +224,16 @@ void delay(struct global_state* s)
 #endif
   } else {
     long long currentTime = current_timestamp();
-    struct timespec timeToWait;
-    long long seconds = (currentTime/1000) + 5;
-    timeToWait.tv_sec = seconds;
-    timeToWait.tv_nsec = (currentTime - seconds*1000)*1000;
+    struct timespec timeToWait = {0, 0};
+    long long n_seconds = (currentTime + 40) * 1000;
+    timeToWait.tv_nsec = n_seconds;
+#ifdef INFO
+    printf("Waiting. %lli\n", n_seconds);
+#endif
     pthread_cond_timedwait(&global_cond, &global_mutex, &timeToWait);
+#ifdef INFO
+    printf("Done waiting.\n");
+#endif
   }
   pthread_mutex_unlock(&global_mutex);
 }
