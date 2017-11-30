@@ -6,7 +6,6 @@ import threads.InputThread;
 import threads.MotionListener;
 import threads.OutputThread;
 
-import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -18,7 +17,7 @@ public class CameraMonitor {
     private PriorityQueue<Pair<Integer, ImageModel>> buffer;
     private boolean sync = true;
     private boolean forceSync = true;
-    private ArrayList<Socket> activeSockets;
+    private HashMap<Integer, Pair<Socket,MotionListener>> connectionMap; //Change to map
     private boolean motionModeChanged = false;
     private int motionMode = Constants.MotionMode.IDLE;
     private int forceMode  = Constants.MotionMode.AUTO;
@@ -33,7 +32,7 @@ public class CameraMonitor {
             }
         });
         bufferCounter = new HashMap<>();
-        activeSockets = new ArrayList<>();
+        connectionMap = new HashMap<>();
         OutputThread outputThread = new OutputThread(this);
         outputThread.start();
     }
@@ -84,8 +83,8 @@ public class CameraMonitor {
     /*
     - OutputThread operations
      */
-    synchronized public ArrayList<Socket> getActiveSockets() {
-        return (ArrayList<Socket>)activeSockets.clone();
+    synchronized public ArrayList<Socket> getConnectionMap() {
+        return (ArrayList<Socket>) connectionMap.clone();
     }
 
     synchronized public int getMotionModeOutput() {
@@ -128,6 +127,19 @@ public class CameraMonitor {
     }
 
     // Used in ConnectAction
+    synchronized  public void disconnectCamera(int key){
+        Pair<Socket,MotionListener> connection = connectionMap.get(key);
+        connectionMap.remove(key);
+        try {
+            Socket socket = connection.getKey();
+            if(socket != null) socket.close();
+
+        } catch (IOException e) {
+            if(Constants.Flags.DEBUG) System.out.println("Socket is already closed");
+        }
+        connection.getValue().interrupt();
+
+    }
     synchronized public void connectCamera(String address , int port, int key){
         Socket socket = null;
         //Korrekt addres och port
@@ -142,17 +154,19 @@ public class CameraMonitor {
         if(Constants.Flags.DEBUG) System.out.println("Successfully created a socket with address: " + address +
                 " and port: " + port + ".");
 
-        activeSockets.add(socket);
         forceMode(socket);
 
         // Init camera threads
         InputThread inputThread = new InputThread(socket, this , key);
         MotionListener motionListener = new MotionListener(this,address);
 
+        connectionMap.put(key  , new Pair<>(socket,motionListener));
         bufferCounter.put(key,0);
+        
         // Start camera threads
-        //motionListener.start();
+        motionListener.start();
         inputThread.start();
+
     }
     private void forceMode(Socket socket){
         OutputStream os = null;

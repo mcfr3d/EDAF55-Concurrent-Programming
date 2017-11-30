@@ -29,7 +29,7 @@ public class InputThread extends Thread {
         try {
             inputStream = new DataInputStream(socket.getInputStream());
             if(Constants.Flags.DEBUG) System.out.println("DataInputStream in InputThread initialized successfully.");
-            while (cameraMonitor.isAlive() && !isInterrupted()) {
+            while (cameraMonitor.isAlive() && !isInterrupted() && !socket.isClosed()) {
                 System.out.println("Runing");
                 ImageModel imageModel = fetchImage(inputStream);
                 cameraMonitor.addImage(key, imageModel);
@@ -37,7 +37,6 @@ public class InputThread extends Thread {
             if(Constants.Flags.DEBUG) System.out.println("Terminating InputThread.");
 
         } catch (IOException e) {
-            e.printStackTrace();
             if(Constants.Flags.DEBUG) System.out.println("DataInputStream in InputThread caused IOException.");
         } finally {
             try {

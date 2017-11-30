@@ -2,9 +2,11 @@ package components;
 
 import javafx.application.Platform;
 import javafx.beans.WeakInvalidationListener;
+import javafx.scene.Camera;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import models.ImageModel;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -19,11 +21,11 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 public class ImageGridView extends AnchorPane {
-    LinkedHashMap<Integer, ImageView> imageMap;
+    LinkedHashMap<Integer, CameraView> cameraViewMap;
 
     public ImageGridView(double width, double height) {
 
-        imageMap = new LinkedHashMap<>();
+        cameraViewMap = new LinkedHashMap<>();
         updateSize(width, height);
 
     }
@@ -31,39 +33,42 @@ public class ImageGridView extends AnchorPane {
 
     public void updateSize(double width, double height) {
         setPrefSize(width, height);
-        updateImages(width, height);
+        //updateImages(width, height);
 
+    }
+    public void connectCamera(int key,String address) {
+        CameraView cameraView = new CameraView(key, address);
+        getChildren().add(cameraView);
+        cameraViewMap.put(key, cameraView);
+        updateImages(getPrefWidth(), getPrefHeight());
     }
 
     private void updateImages(double width, double height) {
-        if (imageMap.size() > 2) {
+        int counter = 0;
+        if (cameraViewMap.size() > 1) {
 
-        } else if (imageMap.size() == 2) {
-            int counter = 0;
-            for (ImageView imageView : imageMap.values()) {
-                imageView.setFitWidth(width/2 );
-                imageView.setFitHeight(height/2 );
-                double offsetLeft = (width/2)*counter +  ((width/2) - imageView.getBoundsInParent().getWidth())/2;
-                double offsetTop  = (height - imageView.getBoundsInParent().getHeight()) / 2;
-                setLeftAnchor(imageView, offsetLeft);
-                setTopAnchor(imageView, offsetTop);
-                ++counter;
-
+            for (CameraView cameraView: cameraViewMap.values()) {
+                double viewWidth  = width / 2 - 30;
+                double viewHeight = height / (cameraViewMap.size()/2) - 30;
+                cameraView.updateSize(viewWidth,viewHeight);
+                double offsetLeft = 15*(1+counter%2) + viewWidth * counter%2;
+                double offsetTop  = (counter > 1 ? 30 : 15) +  viewHeight * counter/2;
+                setLeftAnchor(cameraView, offsetLeft);
+                setTopAnchor(cameraView, offsetTop);
+                counter++;
 
             }
-        } else if (imageMap.size() == 1) {
 
-            for (ImageView imageView : imageMap.values()) {
-                imageView.setFitWidth(width - 60);
-                imageView.setFitHeight(height - 60);
-                double offsetLeft = (width - imageView.getBoundsInParent().getWidth()) / 2;
-                double offsetTop = (height - imageView.getBoundsInParent().getHeight()) / 2;
-                setLeftAnchor(imageView, offsetLeft);
-                setTopAnchor(imageView, offsetTop);
+        } else if (cameraViewMap.size() == 1) {
+
+            for (CameraView cameraView : cameraViewMap.values()) {
+                cameraView.updateSize(width-60,height-60);
+                setLeftAnchor(cameraView, 30.0);
+                setTopAnchor(cameraView, 30.0);
 
             }
         }
-    }
+    }/*
 
     public void updateImage(Image image, int id) {
         Platform.runLater(()->{
@@ -84,13 +89,9 @@ public class ImageGridView extends AnchorPane {
 
         });
     }
+*/
 
-    public void connectCamera(int key) {
-        ImageView imageView = new ImageView();
-        imageView.setPreserveRatio(true);
-        getChildren().add(imageView);
-        System.out.println(getChildren().size());
-        imageMap.put(key, imageView);
-        updateImages(getPrefWidth(), getPrefHeight());
+    public void updateImage(ImageModel imageModel, Integer key) {
+        cameraViewMap.get(key).updateImage(imageModel);
     }
 }

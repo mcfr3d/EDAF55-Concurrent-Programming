@@ -7,6 +7,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import models.ButtonMonitor;
+import models.ImageModel;
 
 public class MainPane extends BorderPane {
     ImageGridView imageGridView;
@@ -27,7 +28,7 @@ public class MainPane extends BorderPane {
             @Override
             public void onEvent(ConnectEvent event) {
                 avalibaleCameras.filtered((curKey) -> false);
-                imageGridView.connectCamera(event.key);
+                imageGridView.connectCamera(event.key, event.address);
                 System.out.println("Connect");
                 buttonMonitor.addAction(new ConnectAction(event.address, event.key));
             }
@@ -41,8 +42,8 @@ public class MainPane extends BorderPane {
         controlPane.updateWidth(w);
     }
 
-    public void updateImage(Image image, Integer key) {
-        imageGridView.updateImage(image,key);
+    public void updateImage(ImageModel imageModel, Integer key) {
+        imageGridView.updateImage(imageModel,key);
 
     }
 }
