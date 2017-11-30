@@ -48,25 +48,20 @@ public class MotionListener extends Thread {
             try {
                 URLConnection conn = url.openConnection();
                 in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-
                 String inputLine;
                 while ((inputLine = in.readLine()) != null){
                     stringBuilder.append(inputLine);
+
                 }
             } catch (IOException e) {
                 if(Constants.Flags.DEBUG) System.out.println("BufferedReader in MotionListener caused IOException.\n" +
                         "Terminating MotionListener.");
                 return;
-            } finally {
-                try {
-                    if(in != null) in.close();
-                } catch(IOException e) {
-                    if(Constants.Flags.DEBUG) System.out.println("BufferedReader in MotionListener already closed.");
-                }
             }
 
             String response = stringBuilder.toString();
             Long[] responseTime = Arrays.stream(response.split(":"))
+                    .map(String::trim)
                     .map(Long::valueOf)
                     .toArray(Long[]::new);
 
