@@ -140,8 +140,8 @@
     -fx-cursor: hand;
     -fx-padding: 8px 15px;
     -fx-background-radius: 0px;
-    -fx-min-width: 75px;
-    -fx-max-width: 75px;
+    -fx-min-width: 90px;
+    -fx-max-width: 90px;
     -fx-text-align:center;
 
 }
