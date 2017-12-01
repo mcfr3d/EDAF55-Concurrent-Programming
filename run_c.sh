@@ -22,21 +22,33 @@ cat > $SSH_FILE << EOF
 
 set nbr [lindex \$argv 0]
 spawn ssh rt@argus-\$nbr
-expect "assword:"
-send "sigge\r"
-interact
+expect {
+  "(yes/no)?" {
+    send "yes\r"
+    exp_continue
+  }
+  "*?assword:" {
+    send "sigge\r"
+    interact
+  }
+  timeout {
+    puts "Timed out. Please try connecting to another camera."
+    exit 1
+  }
+}
 EOF
 chmod 777 $SSH_FILE
 
 cd ..
 
-./build_server.sh
+#./build_server.sh
 
 cd bin_c
 
 wanted_to_scp=$(head -n 1 .output)
+printf "first line: $wanted_to_scp"
 
-if [ "$wanted_to_scp" = "y " ]; then
+if [ "$wanted_to_scp" = "y" ]; then
     camera_nbr=$(sed -n '2p' < .output)
     printf "\n*****\nDo you want to ssh to camera $camera_nbr? (y/n)\n"
     read  -n 1 -p ">" answer
@@ -45,3 +57,4 @@ if [ "$wanted_to_scp" = "y " ]; then
         ./$SSH_FILE "$camera_nbr" 
     fi
 fi
+printf "\nWelcome back.\n"
