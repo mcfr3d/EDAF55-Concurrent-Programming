@@ -41,12 +41,11 @@ chmod 777 $SSH_FILE
 
 cd ..
 
-#./build_server.sh
+./build_server.sh
 
 cd bin_c
 
 wanted_to_scp=$(head -n 1 .output)
-printf "first line: $wanted_to_scp"
 
 if [ "$wanted_to_scp" = "y" ]; then
     camera_nbr=$(sed -n '2p' < .output)
@@ -57,4 +56,3 @@ if [ "$wanted_to_scp" = "y" ]; then
         ./$SSH_FILE "$camera_nbr" 
     fi
 fi
-printf "\nWelcome back.\n"
