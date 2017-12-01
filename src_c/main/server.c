@@ -11,14 +11,6 @@
 #include "server_common.h"
 #include <sys/time.h>
 
-long long current_timestamp() {
-    struct timeval te; 
-    gettimeofday(&te, NULL); // get current time
-    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // caculate milliseconds
-    // printf("milliseconds: %lld\n", milliseconds);
-    return milliseconds;
-} 
-
 #define USE_CAMERA
 //#define DEBUG
 //#define INFO
@@ -109,14 +101,13 @@ void close_camera(struct global_state* state)
     }
 }
 
-/* Sets up the packet structure in client->sendBuff.
- * This is a minimal HTTP header for an image/jpeg
- *
- * sets client->frame_data to the beginning of the frame
- * in the packet
- *
- * returns size of entire packet, or -1 if frame too large
- */
+long long current_timestamp() {
+    struct timeval te; 
+    gettimeofday(&te, NULL); // get current time
+    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // caculate milliseconds
+    return milliseconds;
+} 
+
 ssize_t setup_packet(struct client* client, uint32_t frame_sz, frame* fr)
 {
     size_t header_size = 12;
@@ -201,7 +192,9 @@ int try_get_frame(struct client* client)
 
     if(fr) {
         if((result = client_send_frame(client, fr))) {
+#ifdef DEBUG
           printf("Warning: client_send_frame returned %d\n", result);
+#endif
         }
         frame_free(fr);
     } else {
@@ -269,14 +262,6 @@ void set_mode(struct global_state* s, mode_t mode)
     printf("Old mode: %s\n", modeNames[s->mode]);
     s->mode = mode;
     printf("New mode: %s\n", modeNames[s->mode]);
- /* 
-    if(s->mode == IDLE) {
-      printf("Trying to create sleep thread\n");
-      int res = create_sleep_thread(s);
-      printf("Creating sleep thread result: %i\n",res);    
-    }
-    else pthread_cond_broadcast(&global_cond);
-*/
     pthread_cond_broadcast(&global_cond);
     pthread_mutex_unlock(&global_mutex);
 
@@ -292,7 +277,7 @@ void switch_mode(struct global_state* s)
 }
 
 void* ui_task(void *ctxt)
-{
+{ // Used for debugging purposes
   struct global_state* s = ctxt;
 
   while(is_running(s)){
@@ -344,17 +329,6 @@ void* sleep_task(void *ctxt)
 #ifdef DEBUG
   printf("In sleep task,thread id : %lu\n",pthread_self());
 #endif
-/*
-  while(s->running && s->mode == IDLE){
-      pthread_mutex_unlock(&global_mutex);
-      printf("Sleeping...\n");
-      sleep(IDLE_DELAY);
-      printf("Done sleeping. Nice nap.\n");
-
-      pthread_mutex_lock(&global_mutex);
-      pthread_cond_broadcast(&global_cond);
-  }
-*/
   while(s->running){
       mode_t mode = s->mode;
       pthread_mutex_unlock(&global_mutex);
@@ -410,6 +384,7 @@ int try_accept(struct global_state* state, struct client* client)
     printf("Waiting for client to accept\n");
 #endif
     client->connfd = accept(state->listenfd, (struct sockaddr*)NULL, NULL);
+    printf("Client connected.\n");
 #ifdef INFO
     printf("Client accepted\n");
 #endif
@@ -481,7 +456,9 @@ void* serve_client(void *ctxt)
       memset(client->sendBuff, 0, sizeof(client->sendBuff));
       int cres = 0;
       if( !client->cam || (cres=try_get_frame(client))) {
+#ifdef DEBUG
           printf("ERROR getting frame from camera: %d\n",cres);
+#endif
       }
 
     }
@@ -498,7 +475,9 @@ void* read_input(void *ctxt)
     while(is_running(state) && status) {
         memset(client->recvBuff, 0, sizeof(client->recvBuff));
 	status = recv(client->connfd, &client->recvBuff, RECVSIZE, MSG_WAITALL);
+#ifdef DEBUG
         printf("Current receive status: %i\n", status);
+#endif
 
         if(status==RECVSIZE) {
             byte running_status = client->recvBuff[0];
@@ -515,6 +494,9 @@ void* read_input(void *ctxt)
     pthread_mutex_lock(&global_mutex);
     client->running = 0;
     pthread_mutex_unlock(&global_mutex);
+
+    printf("Client disconnected.\n");
+
     return 0;
 }
 
@@ -557,7 +539,9 @@ static int create_threads(struct global_state* state)
     pthread_detach(state->ui_thread);
 
     int res = create_sleep_thread(state);
+#ifdef INFO
     printf("Init sleep thread. Result: %i\n",res);
+#endif
 failed_to_start_ui_thread:
 failed_to_start_main_thread:
 failed_to_start_bg_thread:
@@ -571,7 +555,9 @@ static void join_bg_thread(pthread_t* bg_thread, const char* msg)
     if(pthread_join(*bg_thread, &status)){
         perror("join bg_tread");
     } else {
+#ifdef INFO
         printf("Join bg thread (%s): status = " FORMAT_FOR_SIZE_T "\n", msg, (intptr_t) status);
+#endif
     }
 }
 
@@ -639,7 +625,9 @@ int is_running(struct global_state* state)
 
 int create_socket(struct global_state* state)
 {
+#ifdef INFO
     printf("Creating socket.\n");
+#endif
     int reuse;
     state->listenfd = socket(AF_INET, SOCK_STREAM, 0);
     state->motionfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -650,7 +638,6 @@ int create_socket(struct global_state* state)
     }
 
     reuse = 1;
-    //TODO look at what this does
     set_socket_sigpipe_option(state->listenfd);
     if(setsockopt(state->listenfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse))){
       perror("setsockopt listenfd");
@@ -673,7 +660,9 @@ int bind_and_listen(struct global_state* state, int port)
     serv_addr.sin_port = htons(port);
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
+#ifdef INFO
     printf("Binding...\n");
+#endif
     if( bind(state->listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr))) {
         perror("bind listenfd");
         return errno;
@@ -684,12 +673,16 @@ int bind_and_listen(struct global_state* state, int port)
     printf("Server address: %lu <--\n",serv_addr.sin_addr.s_addr);
 #endif
 
+#ifdef INFO
     printf("Listening...\n");
+#endif
     if(listen(state->listenfd, 10)){
         perror("listen listenfd");
         return errno;
     }
+#ifdef INFO
     printf("Done listening.\n");
+#endif
 
     return 0;
 }
@@ -702,7 +695,7 @@ int main(int argc, char *argv[])
     int result=0;
 
     if(argc==2) {
-        printf("interpreting %s as port number\n", argv[1]);
+        //printf("interpreting %s as port number\n", argv[1]);
         port = atoi(argv[1]);
     } else {
         port = 5000;
@@ -726,6 +719,7 @@ int main(int argc, char *argv[])
         goto failed_to_start_threads;
     }
 
+    printf("Server started...\n");
     join_bg_thread(&state.bg_thread, "bg_thread");
     join_bg_thread(&state.main_thread, "main_thread");
 
