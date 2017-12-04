@@ -52,10 +52,10 @@ public class CameraMonitor {
         return alive;
     }
 
-    private void incrementBufferSize(int key){
+    private synchronized void incrementBufferSize(int key){
         bufferCounter.put(key, bufferCounter.get(key)+1);
     }
-    private void decrementBufferSize(int key){
+    private synchronized void decrementBufferSize(int key){
         bufferCounter.put(key, bufferCounter.get(key)-1);
     }
 
@@ -188,7 +188,7 @@ public class CameraMonitor {
         inputThread.start();
 
     }
-    private void forceMode(Socket socket){
+    private synchronized void forceMode(Socket socket){
         OutputStream os = null;
         try {
             byte code;
@@ -233,13 +233,13 @@ public class CameraMonitor {
         return sync;
     }
 
-    private boolean shouldBeAsync(){
+    private synchronized boolean shouldBeAsync(){
         return !bufferCounter.values()
                 .stream()
                 .map(size -> size > 0)
                 .reduce(true,(res,hasImage) -> res && hasImage);
     }
-    private boolean shouldBeSync(long oldestTimeStamp){
+    private synchronized boolean shouldBeSync(long oldestTimeStamp){
         return  oldestTimeStamp + 400 >= System.currentTimeMillis() &&  bufferCounter.values()
                 .stream()
                 .map((size) -> size > 5)
@@ -266,12 +266,11 @@ public class CameraMonitor {
 
 
 
-    private Pair<Integer, ImageModel> getImageSync(){
+    private synchronized Pair<Integer, ImageModel> getImageSync(){
         //TODO MASSOR
 
         while(!buffer.isEmpty() && buffer.peek().getValue().timeStamp + 400 >= System.currentTimeMillis()){
             try {
-
                 long dt = Math.max(buffer.peek().getValue().timeStamp + 400 - System.currentTimeMillis(),0);
                 wait(dt);
             } catch (InterruptedException e) {
@@ -289,7 +288,7 @@ public class CameraMonitor {
 
     }
 
-    private Pair<Integer,ImageModel> getImageAsync(){
+    private synchronized Pair<Integer,ImageModel> getImageAsync(){
         while(!buffer.isEmpty() && buffer.peek().getValue().timeStamp + 200 >= System.currentTimeMillis()){
             try {
                 long dt = Math.max(buffer.peek().getValue().timeStamp + 200 - System.currentTimeMillis(),0);
@@ -311,7 +310,7 @@ public class CameraMonitor {
     }
 
 
-    public void setForceSync(boolean sync) {
+    public synchronized void setForceSync(boolean sync) {
         forceSync = sync;
     }
 }
