@@ -4,19 +4,19 @@ import models.CameraMonitor;
 
 public class SyncAction extends Action {
 
-    public final int code;
+    public boolean sync;
 
-    public SyncAction(int code){
-        this.code = code;
+    public SyncAction(boolean sync){
+        this.sync = sync;
     }
 
     @Override
     public void op(CameraMonitor monitor) {
-        monitor.setForceMode(code);
+        monitor.setForceSync(sync);
     }
 
     @Override
     public String toString() {
-        return "SyncAction with code: " + code + ".";
+        return "SyncAction with Sync value: " + sync + ".";
     }
 }

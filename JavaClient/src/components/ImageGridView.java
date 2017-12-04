@@ -41,7 +41,10 @@ public class ImageGridView extends Pane {
         System.out.println(cameraViewMap.size());
         updateImages(getPrefWidth(), getPrefHeight());
     }
-
+    public void removeCameraView(int key){
+        getChildren().remove(cameraViewMap.get(key));
+        cameraViewMap.remove(key);
+    }
     private void updateImages(double width, double height) {
         if (cameraViewMap.size() > 1) {
             int rows = (cameraViewMap.size()+1)/2;
@@ -65,6 +68,8 @@ public class ImageGridView extends Pane {
         }
     }
     public void updateImage(ImageModel imageModel, Integer key) {
-        cameraViewMap.get(key).updateImage(imageModel);
+        if(cameraViewMap.containsKey(key)) {
+            cameraViewMap.get(key).updateImage(imageModel);
+        }
     }
 }

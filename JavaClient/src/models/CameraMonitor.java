@@ -6,10 +6,13 @@ import threads.InputThread;
 import threads.MotionListener;
 import threads.OutputThread;
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class CameraMonitor {
 
@@ -83,8 +86,12 @@ public class CameraMonitor {
     /*
     - OutputThread operations
      */
-    synchronized public ArrayList<Socket> getConnectionMap() {
-        return (ArrayList<Socket>) connectionMap.clone();
+    synchronized public ArrayList<Socket> getActiveSockets() {
+        return connectionMap.values()
+                .stream()
+                .map(entry -> entry.getKey())
+                .collect(Collectors.toCollection(ArrayList::new));
+
     }
 
     synchronized public int getMotionModeOutput() {
@@ -127,17 +134,30 @@ public class CameraMonitor {
     }
 
     // Used in ConnectAction
-    synchronized  public void disconnectCamera(int key){
-        Pair<Socket,MotionListener> connection = connectionMap.get(key);
-        connectionMap.remove(key);
-        try {
-            Socket socket = connection.getKey();
-            if(socket != null) socket.close();
+    synchronized public void disconnectCamera(int key){
+        if(connectionMap.containsKey(key)) {
+            Pair<Socket, MotionListener> connection = connectionMap.get(key);
+            connectionMap.remove(key);
+            try {
+                Socket socket = connection.getKey();
+                if (socket != null) socket.close();
 
-        } catch (IOException e) {
-            if(Constants.Flags.DEBUG) System.out.println("Socket is already closed");
+            } catch (IOException e) {
+                if (Constants.Flags.DEBUG) System.out.println("Socket is already closed");
+            }
+            connection.getValue().interrupt();
+            bufferCounter.remove(key);
+
+            //Remove images from this camera
+            Iterator<Pair<Integer, ImageModel>> bufferIterator = buffer.iterator();
+            while (bufferIterator.hasNext()) {
+                Pair<Integer, ImageModel> currentItem = bufferIterator.next();
+                if (currentItem.getKey() == key) {
+                    bufferIterator.remove();
+                }
+
+            }
         }
-        connection.getValue().interrupt();
 
     }
     synchronized public void connectCamera(String address , int port, int key){
@@ -249,25 +269,28 @@ public class CameraMonitor {
     private Pair<Integer, ImageModel> getImageSync(){
         //TODO MASSOR
 
-        while(buffer.peek().getValue().timeStamp + 400 >= System.currentTimeMillis()){
+        while(!buffer.isEmpty() && buffer.peek().getValue().timeStamp + 400 >= System.currentTimeMillis()){
             try {
+
                 long dt = Math.max(buffer.peek().getValue().timeStamp + 400 - System.currentTimeMillis(),0);
                 wait(dt);
             } catch (InterruptedException e) {
                 //RIP
             }
         }
+        if(buffer.isEmpty()){
+            return null;
+        }
+
         Pair<Integer,ImageModel> image = buffer.poll();
-
         sync = !shouldBeAsync();
-
         decrementBufferSize(image.getKey());
         return image;
 
     }
 
     private Pair<Integer,ImageModel> getImageAsync(){
-        while(buffer.peek().getValue().timeStamp + 200 >= System.currentTimeMillis()){
+        while(!buffer.isEmpty() && buffer.peek().getValue().timeStamp + 200 >= System.currentTimeMillis()){
             try {
                 long dt = Math.max(buffer.peek().getValue().timeStamp + 200 - System.currentTimeMillis(),0);
                 wait(dt);
@@ -275,13 +298,20 @@ public class CameraMonitor {
 
             }
         }
-
+        if(buffer.isEmpty()){
+            return null;
+        }
         Pair<Integer,ImageModel> image = buffer.poll();
-        sync = shouldBeSync(buffer.peek().getValue().timeStamp);
+        if(!buffer.isEmpty()) {
+            sync = shouldBeSync(buffer.peek().getValue().timeStamp);
+        }
         decrementBufferSize(image.getKey());
-        return  image;
+        return image;
 
     }
 
 
+    public void setForceSync(boolean sync) {
+        forceSync = sync;
+    }
 }

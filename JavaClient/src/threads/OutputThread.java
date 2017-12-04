@@ -31,7 +31,7 @@ public class OutputThread extends Thread {
             }
 
             // Broadcast the newly set mode to all cameras
-            for(Socket socket : cameraMonitor.getConnectionMap()){
+            for(Socket socket : cameraMonitor.getActiveSockets()){
                 OutputStream os = null;
                 try {
                     os = socket.getOutputStream();

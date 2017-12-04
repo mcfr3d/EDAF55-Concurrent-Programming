@@ -21,8 +21,10 @@ public class SyncThread extends Thread {
     @Override
     public void run() {
         while (cameraMonitor.isAlive() && !isInterrupted()) {
-            Pair<Integer,ImageModel> image = cameraMonitor.getImage();
-            mainPane.updateImage(image.getValue() , image.getKey());
+            Pair<Integer, ImageModel> image = cameraMonitor.getImage();
+            if (image!= null) {
+                mainPane.updateImage(image.getValue(), image.getKey());
+            }
         }
         if(Constants.Flags.DEBUG) System.out.println("Terminating SyncThread.");
     }

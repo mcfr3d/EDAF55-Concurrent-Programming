@@ -11,7 +11,6 @@ import threads.SyncThread;
 
 
 public class main extends Application {
-    ListView<CameraModel> list = new ListView<>();
     static int port;
     public static void main(String[] args) {
         if(args.length > 0){

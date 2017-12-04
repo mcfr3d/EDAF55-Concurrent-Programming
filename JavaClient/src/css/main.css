@@ -70,6 +70,20 @@
     -fx-background-insets: 0, 0;
     -fx-border-width: 0;
 }
+.delay-text{
+    -fx-font-family: "Helvetica" , "Arial";
+    -fx-font-weight: bold;
+    -fx-font-size:16px;
+
+}
+.disconnect-button{
+    -fx-max-width: 20px;
+    -fx-max-height: 20px;
+    -fx-cursor: hand;
+
+    -fx-min-width: 20px;
+    -fx-min-height: 20px;
+}
 .combo-box-popup .list-view .list-cell{
     -fx-padding: 4 0 4 5;
     -fx-text-fill: rgba(255,255,255,0.8);

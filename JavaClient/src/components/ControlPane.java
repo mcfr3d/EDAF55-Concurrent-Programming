@@ -56,7 +56,15 @@ public class ControlPane extends AnchorPane {
         syncControl.addEventHandler(MultipleChoiceEvent.MULTIPLE_CHOICE_EVENT, new MultipleChoiceHandler() {
             @Override
             public void onEvent(int code) {
-                buttonMonitor.addAction(new SyncAction(code));
+                switch(code){
+                    case Constants.SyncMode.ASYNC:
+                        buttonMonitor.addAction(new SyncAction(false));
+                        break;
+                    case Constants.SyncMode.SYNC:
+                        buttonMonitor.addAction(new SyncAction(true));
+                        break;
+
+                }
             }
         });
 
@@ -103,12 +111,6 @@ public class ControlPane extends AnchorPane {
                 }
             }
         });
-        /*dialogPane.addEventHandler(ConnectEvent.CONNECT_EVENT, new ConnectHandler() {
-            @Override
-            public void onEvent(ConnectEvent event) {
-                fireEvent(event);
-            }
-        });*/
     }
     public void updateWidth(double w){
         setPrefWidth(w);

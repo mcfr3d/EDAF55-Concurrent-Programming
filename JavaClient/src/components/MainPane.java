@@ -32,18 +32,22 @@ public class MainPane extends BorderPane {
             public void onEvent(ConnectEvent event) {
 
                 avalibaleCameras.remove(event.key);
-
                 imageGridView.connectCamera(event.key, event.address);
-                System.out.println("Connect");
-                buttonMonitor.addAction(new ConnectAction(event.address, event.key, port));
+                buttonMonitor.addAction(new ConnectAction(event.address, port, event.key));
             }
         });
+
         imageGridView.addEventHandler(DisconnectEvent.DISCONNECT_EVENT, new DisconnectHandler() {
             @Override
             public void onEvent(int key) {
+                avalibaleCameras.add(key);
+                avalibaleCameras.sort(Integer::compareTo);
+                imageGridView.removeCameraView(key);
+                imageGridView.updateSize(imageGridView.getPrefWidth(),imageGridView.getHeight());
                 buttonMonitor.addAction(new DisconnectAction(key));
             }
         });
+
 
 
     }
@@ -52,6 +56,7 @@ public class MainPane extends BorderPane {
         controlPane.updateWidth(w);
     }
     public void updateImage(ImageModel imageModel, Integer key) {
+
         imageGridView.updateImage(imageModel,key);
 
     }
