@@ -25,7 +25,7 @@ public class ControlPane extends AnchorPane {
     VBox multipleChoiceControl;
     DialogPane dialogPane;
 
-    public ControlPane(ButtonMonitor buttonMonitor , Stage primaryStage, double width, ObservableList<String> avalibaleCameras){
+    public ControlPane(ButtonMonitor buttonMonitor , Stage primaryStage, double width, ObservableList<Integer> avalibaleCameras){
 
         multipleChoiceControl = new VBox();
 

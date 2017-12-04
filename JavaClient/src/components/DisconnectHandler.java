@@ -4,7 +4,7 @@ import javafx.event.EventHandler;
 
 public abstract class DisconnectHandler implements EventHandler<DisconnectEvent> {
 
-    public abstract void onEvent(String event);
+    public abstract void onEvent(int key);
 
 
     @Override

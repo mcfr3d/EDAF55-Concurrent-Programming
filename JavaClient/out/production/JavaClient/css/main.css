@@ -70,21 +70,16 @@
     -fx-background-insets: 0, 0;
     -fx-border-width: 0;
 }
-.combo-box-popup .list-view .list-cell
-{
+.combo-box-popup .list-view .list-cell{
     -fx-padding: 4 0 4 5;
     -fx-text-fill: rgba(255,255,255,0.8);
-
-    /* No alternate highlighting */
     -fx-background-color: #4752E8;
     -fx-font-family: "Helvetica" , "Arial";
-
-     -fx-font-weight: bold;
-     -fx-font-size:16px;
-
+    -fx-font-weight: bold;
+    -fx-font-size:16px;
 }
-.combo-box .arrow, .combo-box .arrow-button{
-    -fx-fill: white;
+.combo-box .arrow, .combo-box .arrow-button > .arrow{
+    -fx-background-color: white;
 }
 .combo-box-popup .list-view .list-cell:filled:hover
 {

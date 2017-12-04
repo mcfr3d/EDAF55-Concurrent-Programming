@@ -6,6 +6,7 @@ import javafx.scene.Camera;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import models.ImageModel;
 
 import javax.imageio.ImageIO;
@@ -20,77 +21,49 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
-public class ImageGridView extends AnchorPane {
+public class ImageGridView extends Pane {
     LinkedHashMap<Integer, CameraView> cameraViewMap;
 
     public ImageGridView(double width, double height) {
-
         cameraViewMap = new LinkedHashMap<>();
         updateSize(width, height);
-
     }
 
 
     public void updateSize(double width, double height) {
         setPrefSize(width, height);
-        //updateImages(width, height);
-
+        updateImages(width, height);
     }
     public void connectCamera(int key,String address) {
         CameraView cameraView = new CameraView(key, address);
         getChildren().add(cameraView);
         cameraViewMap.put(key, cameraView);
+        System.out.println(cameraViewMap.size());
         updateImages(getPrefWidth(), getPrefHeight());
     }
 
     private void updateImages(double width, double height) {
-        int counter = 0;
         if (cameraViewMap.size() > 1) {
-
+            int rows = (cameraViewMap.size()+1)/2;
+            int counter = 0;
+            double viewWidth = width/2 - 30;
+            double viewHeight = height/rows - 40;
             for (CameraView cameraView: cameraViewMap.values()) {
-                double viewWidth  = width / 2 - 30;
-                double viewHeight = height / (cameraViewMap.size()/2) - 30;
                 cameraView.updateSize(viewWidth,viewHeight);
-                double offsetLeft = 15*(1+counter%2) + viewWidth * counter%2;
-                double offsetTop  = (counter > 1 ? 30 : 15) +  viewHeight * counter/2;
-                setLeftAnchor(cameraView, offsetLeft);
-                setTopAnchor(cameraView, offsetTop);
-                counter++;
-
+                double offsetLeft = (counter % 2 == 0 ? 20 : 40) + (viewWidth * (counter % 2));
+                double offsetTop  = 20 * (counter/2+1) + viewHeight * (counter/2);
+                cameraView.relocate(offsetLeft,offsetTop);
+                ++counter;
             }
-
         } else if (cameraViewMap.size() == 1) {
 
             for (CameraView cameraView : cameraViewMap.values()) {
                 cameraView.updateSize(width-60,height-60);
-                setLeftAnchor(cameraView, 30.0);
-                setTopAnchor(cameraView, 30.0);
+                cameraView.relocate(30 , 30);
 
             }
         }
-    }/*
-
-    public void updateImage(Image image, int id) {
-        Platform.runLater(()->{
-            if(imageMap.containsKey(id)){
-                imageMap.get(id).setImage(image);
-            }else{
-                ImageView imageView = new ImageView();
-                imageView.setImage(image);
-                imageView.setPreserveRatio(true);
-                getChildren().add(imageView);
-                System.out.println(getChildren().size());
-                imageMap.put(id, imageView);
-                updateImages(getPrefWidth(), getPrefHeight());
-                //animation
-            }
-
-
-
-        });
     }
-*/
-
     public void updateImage(ImageModel imageModel, Integer key) {
         cameraViewMap.get(key).updateImage(imageModel);
     }

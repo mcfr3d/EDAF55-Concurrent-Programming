@@ -17,7 +17,8 @@ import javafx.util.Duration;
 
 public class DialogPane extends Pane {
     boolean open = false;
-    public DialogPane(ObservableList<String> avalibaleCameras){
+    ComboBox<Integer> cameraChooser;
+    public DialogPane(ObservableList<Integer> avalibaleCameras){
         setMinWidth(250);
         setMinHeight(150);
         getStyleClass().add("dialog-pane");
@@ -32,7 +33,7 @@ public class DialogPane extends Pane {
         cameraOptionBox.setPadding(new Insets(0,10,0,10));
         Button cancelButton = new Button("Cancel");
         Button connectButton = new Button("Connect");
-        ComboBox<String> cameraChooser = new ComboBox(avalibaleCameras);
+        cameraChooser = new ComboBox(avalibaleCameras);
 
         cameraChooser.getSelectionModel().select(0);
 
@@ -60,9 +61,10 @@ public class DialogPane extends Pane {
 
         connectButton.setOnMouseClicked(event -> {
             close();
-            int key = Integer.valueOf(cameraChooser.getSelectionModel().getSelectedItem());
+            int key = cameraChooser.getSelectionModel().getSelectedItem();
             String address = "argus-" + key;
             this.fireEvent(new ConnectEvent(ConnectEvent.CONNECT_EVENT,key,address));
+
         });
 
         infoText.relocate(15,20);
@@ -72,9 +74,11 @@ public class DialogPane extends Pane {
 
     }
     public void show(){
+        cameraChooser.getSelectionModel().selectFirst();
         open = true;
         final Animation animation = new Transition() {
             {
+
                 setCycleDuration(Duration.millis(150));
 
             }

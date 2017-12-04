@@ -37,18 +37,10 @@ public class ConnectDialog extends Stage {
         Button connect = new Button("Connect");
         bottomBox.getChildren().add(cancel);
         bottomBox.getChildren().add(connect);
-        cancel.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                close();
-            }
-        });
-        connect.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                close();
-                //buttonMonitor.addAction(new ConnectAction("argus-" + numberList.getSelectionModel().getSelectedItem()));
-            }
+        cancel.setOnAction(event -> close());
+        connect.setOnAction(event -> {
+            close();
+            //buttonMonitor.addAction(new ConnectAction("argus-" + numberList.getSelectionModel().getSelectedItem()));
         });
         Scene dialogScene = new Scene(dialogBorderPane, 300, 200);
         setScene(dialogScene);

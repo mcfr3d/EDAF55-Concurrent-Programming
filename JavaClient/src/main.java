@@ -12,8 +12,15 @@ import threads.SyncThread;
 
 public class main extends Application {
     ListView<CameraModel> list = new ListView<>();
+    static int port;
     public static void main(String[] args) {
+        if(args.length > 0){
+            port = Integer.valueOf(args[0]);
+        }else{
+            port = 6666;
+        }
         launch(args);
+
     }
 
     @Override
@@ -28,7 +35,7 @@ public class main extends Application {
         ButtonMonitor buttonMonitor = new ButtonMonitor();
         ButtonHandler buttonHandler = new ButtonHandler(cameraMonitor,buttonMonitor);
 
-        MainPane mainPane = new MainPane(buttonMonitor,primaryStage);
+        MainPane mainPane = new MainPane(buttonMonitor,primaryStage,port);
 
         SyncThread syncThread = new SyncThread(cameraMonitor,mainPane);
 
