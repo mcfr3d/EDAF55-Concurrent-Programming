@@ -11,7 +11,6 @@ OUTPUT_FILE=".output"
 
 cd src_c/main
 make -f Makefile
-# {rm -rfv fake_server.dSYM} &>/dev/null
 
 cd ../..
 
@@ -37,9 +36,20 @@ set f2 [lindex \$argv 1]
 set f3 [lindex \$argv 2]
 set nbr [lindex \$argv 3]
 spawn scp \$f1 \$f2 \$f3 rt@argus-\$nbr.student.lth.se:~/
-expect "assword:"
-send "sigge\r"
-interact
+expect {
+  "(yes/no)?" {
+    send "yes\r"
+    exp_continue
+  }
+  "*?assword:" {
+    send "sigge\r"
+    interact
+  }
+  timeout {
+    puts "Timed out after 10s. Please try sending files to other camera."
+    exit 1
+  }
+}
 EOF
         chmod 777 $SCP_FILE
         ./$SCP_FILE "$FILE_NAME" "motion_server" "run_b5.sh" "$nbr"
