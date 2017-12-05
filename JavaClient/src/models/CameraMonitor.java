@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 public class CameraMonitor {
 
-    private final static int SYNC_THRESHOLD = 200;
     private PriorityQueue<Pair<Integer, ImageModel>> buffer;
     private boolean sync = true;
     private boolean forceSync = true;
@@ -127,11 +126,10 @@ public class CameraMonitor {
     }
 
     // Used in SyncAction
-    synchronized public void setSync(boolean sync) {
-        // TODO
-        if(Constants.Flags.DEBUG) System.out.println("Setting sync in setSync to " + sync + ".");
-        this.sync = sync;
+    public synchronized void setForceSync(boolean sync) {
+        forceSync = sync;
     }
+
 
     // Used in ConnectAction
     synchronized public void disconnectCamera(int key){
@@ -162,7 +160,6 @@ public class CameraMonitor {
     }
     synchronized public void connectCamera(String address , int port, int key){
         Socket socket = null;
-        //Korrekt addres och port
         try {
             socket = new Socket(address, port);
         } catch(IOException e) {
@@ -227,12 +224,6 @@ public class CameraMonitor {
     - SyncThread operations
      */
 
-    // TODO: Refactor
-
-    synchronized public boolean isSync() {
-        return sync;
-    }
-
     private synchronized boolean shouldBeAsync(){
         return !bufferCounter.values()
                 .stream()
@@ -263,12 +254,7 @@ public class CameraMonitor {
 
     }
 
-
-
-
     private synchronized Pair<Integer, ImageModel> getImageSync(){
-        //TODO MASSOR
-
         while(!buffer.isEmpty() && buffer.peek().getValue().timeStamp + 400 >= System.currentTimeMillis()){
             try {
                 long dt = Math.max(buffer.peek().getValue().timeStamp + 400 - System.currentTimeMillis(),0);
@@ -307,10 +293,5 @@ public class CameraMonitor {
         decrementBufferSize(image.getKey());
         return image;
 
-    }
-
-
-    public synchronized void setForceSync(boolean sync) {
-        forceSync = sync;
     }
 }
