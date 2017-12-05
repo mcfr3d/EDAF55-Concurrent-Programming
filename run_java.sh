@@ -13,6 +13,9 @@ javac -d out src/main.java src/*/*.java
 mkdir out/css &>/dev/null
 cp src/css/main.css out/css/main.css
 
+mkdir out/resources &>/dev/null
+cp src/resources/disconnect.png out/resources/disconnect.png
+
 port=$([ -z "$1" ] && printf "6666" || printf "$1")
 
-java -cp out main $port
+java -cp out main $port 
