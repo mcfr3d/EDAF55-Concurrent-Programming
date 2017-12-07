@@ -1,6 +1,7 @@
 #!/bin/bash
 
 RUN_FILE="run_b5.sh"
+mkdir bin_c &>/dev/null
 
 cd bin_c
 cat > $RUN_FILE << EOF

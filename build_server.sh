@@ -16,6 +16,7 @@ cd ../..
 
 {mkdir bin_c} &>/dev/null
 mv src_c/main/server bin_c/$FILE_NAME
+mv src_c/main/motion_server bin_c/motion_server
 
 rm -f bin_c/$OUTPUT_FILE &>/dev/null
 touch bin_c/$OUTPUT_FILE
