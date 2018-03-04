@@ -1,103 +1,109 @@
-# Eclipse
-.classpath
-.project
-.settings/
 .metadata
-# Intellij
-.idea/
-*.iml
-*.iws
-JavaClient/out/*
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
 
-#Bin C
-bin_c/*
-bin_c/.*
+# External tool builders
+.externalToolBuilders/
 
-# Mac
-.DS_Store
+# Locally stored "Eclipse launch configurations"
+*.launch
 
-# Maven
-log/
-target/
+# PyDev specific (Python IDE for Eclipse)
+*.pydevproject
 
-# Java
-# Compiled class file
-*.class
+# CDT-specific (C/C++ Development Tooling)
+.cproject
 
-# Log file
-*.log
+# CDT- autotools 
+.autotools
 
-# BlueJ files
-*.ctxt
+# Java annotation processor (APT)
+.factorypath
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# PDT-specific (PHP Development Tools)
+.buildpath
 
-# Package Files #
+# sbteclipse plugin
+.target
+
+# Tern plugin
+.tern-project
+
+# TeXlipse plugin
+.texlipse
+
+# STS (Spring Tool Suite)
+.springBeans
+
+# Code Recommenders
+.recommenders/
+
+# Scala IDE specific (Scala & Java development for Eclipse)
+.cache-main
+.scala_dependencies
+.worksheet
+
+#
+# Project specific excludes
+#
+
+tomcat
+
+#
+# Default excludes
+#
+
+# Binaries
+*.7z
+*.dmg
+*.gz
+*.iso
 *.jar
+*.rar
+*.tar
+*.zip
 *.war
 *.ear
-*.zip
-*.tar.gz
-*.rar
+*.sar
+*.class
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-/bin/
+# Maven 
+target/
 
-#### C
+# IntelliJ project files 
+*.iml
+*.iws
+*.ipr
+.idea/
 
-# Prerequisites
-*.d
+# eclipse project file
+.settings/
+.classpath
+.project
 
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
-
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+# NetBeans specific
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
 
 
+# OS
+.DS_Store
+
+# Misc
+*.swp
+release.properties
+pom.xml.releaseBackup
+pom.xml.tag

@@ -1,0 +1,19 @@
+sed '-es/__SUBST__MAINNAME__SUBST__/Main/g' \
+            '-es=__SUBST__SOURCE_DEPENDS__SUBST__=done/ClockInput.java done/ClockOutput.java done/InputSampler.java todo/AlarmClock.java=g'\
+            '-es=__SUBST__AUX_NATIVE_SRC__SUBST__=native/@THREAD@/done_ClockInput.c native/@THREAD@/done_ClockOutput.c native/@THREAD@/ClockDevice.c=g'\
+	 < /usr/local/cs/rtp/tools/ljrt-rev312/J2CTranslator/test/Makefile.am.skel >Makefile.am
+sed -es/__SUBST__MAINNAME__SUBST__/Main/g \
+	 < /usr/local/cs/rtp/tools/ljrt-rev312/J2CTranslator/test/configure.in.skel >configure.in
+touch COPYING
+touch NEWS
+touch README
+touch AUTHORS
+touch ChangeLog
+sh /usr/local/cs/rtp/tools/ljrt-rev312/J2CTranslator/test/bootstrap
+Using default automake version
+Setting up m4 macros
+Creating headers
+Autogenerating Makefile.ins
+Patching toplevel Makefile.in
+Creating configure script
+You can now run ./configure --help (or ./configure && make)

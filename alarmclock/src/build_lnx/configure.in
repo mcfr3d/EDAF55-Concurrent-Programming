@@ -1,0 +1,1440 @@
+dnl ------------------------------------------------------------
+dnl Init autoconf
+dnl ------------------------------------------------------------
+AC_INIT(Main.java)
+
+dnl ------------------------------------------------------------
+dnl Test that the user is not configuring from the src dir
+dnl We do not want this, as it is to easy to pollute the build
+dnl area for this particular project.
+dnl ------------------------------------------------------------
+if test "x$0" = "x./configure" ; then
+  if test "x$1" != "x--help" ; then 
+    echo "*** It seems that you are running configure from the src directory"
+    echo "*** This is recommended against. Instead, create a directory that"
+    echo "*** reflects your intended configuration, change to this directory"
+    echo "*** and run ../configure <options>"
+    echo "*** It is possible to run ./configure --help, if you wish to"
+    echo "*** examine the possible options to ./configure"
+    exit 1
+  fi
+fi
+
+dnl ------------------------------------------------------------
+dnl Check system type - must be done quite early
+dnl ------------------------------------------------------------
+AC_CANONICAL_SYSTEM
+
+dnl ------------------------------------------------------------
+dnl Setup for automatic renaming of binaries (optional)
+dnl ------------------------------------------------------------
+dnl AC_ARG_PROGRAM
+
+dnl ------------------------------------------------------------
+dnl Init automake
+dnl ------------------------------------------------------------
+AM_INIT_AUTOMAKE(Main, "autotools-0.0.1")
+
+dnl ------------------------------------------------------------
+dnl Create a config header. This can be used to determine if 
+dnl specific features are supported
+dnl ------------------------------------------------------------
+AM_CONFIG_HEADER(config.h)
+
+dnl ------------------------------------------------------------
+dnl We are building using Java-2-C
+dnl ------------------------------------------------------------
+AC_DEFINE(JAVA_2_C, 1, set to enable Java-specific features )
+
+dnl -----
+dnl Set linker (needed since we must use "ld" (and not "gcc") for STORK
+dnl and RTAI (this variable may be overridden later in the script...)
+dnl -----
+dnl CCLD=gcc
+
+dnl Must define GCJ even though it is not used, otherwise we run into
+dnl problems when generating build system
+AM_PROG_GCJ()
+
+
+dnl Hack to find libc.a (needed for setjmp/longjmp if exceptions enabled)
+dnl (this variable may be overridden in the host selection part...)
+LIBC_A_PATH="/usr/lib"
+
+dnl ------------------------------------------------------------
+dnl Make sure that flags can be passed on the command line
+dnl ------------------------------------------------------------
+dnl We do not mess with LDFLAGS, but do touch CFLAGS, CPPFLAGS and LIBS
+dnl Note, these options should maybe not be set for the FLAGS
+dnl before we have performed the feature set. Hmmm... 
+dnl TODO: Set these differently
+dnl LOCAL_CFLAGS="$CFLAGS -Wall -Wcast-qual -Wcast-align -Wwrite-strings -Wno-long-long"
+J2C_JAVA2CFLAGS=""
+J2C_CFLAGS="$CFLAGS -O3" dnl Can as well use full optimization, AndersN
+J2C_CPPFLAGS="$CPPFLAGS "
+J2C_DEFS="$DEFS -DJAVAMAIN=Main_main_java_lang_StringA "
+J2C_LIBS="$LIBS "
+J2C_LDFLAGS="$LDFLAGS "
+
+FLAGS=""
+dnl GC_DIR=../../../gc
+
+if test "x$J2C_HOME" = "x" ; then
+  J2C_HOME="\$(top_srcdir)/../../../"
+fi   
+AC_SUBST(J2C_HOME)
+
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+dnl CHECK HOST
+dnl In this section, the host specific stuff is configured
+dnl This is nice for debugging the configure tool chain
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+AC_MSG_RESULT([Host is 
+host: $host
+host_cpu: $host_cpu
+host_vendor: $host_vendor
+host_os: $host_os])
+
+dnl I think this is the place to add some stuff ... about 
+dnl translating host to ports and stuff... 
+dnl j2c_port=""
+
+dnl We might as well check that we are configuring for hosts that
+dnl we support. Could also massage the host type here, I believe.
+case "${host}" in
+  dnl rtai on cris
+  cris-axis-linux*) 
+    HOST_CRIS="yes"
+    AC_DEFINE(BITS64, 0, Define when building with BITS64)
+    AC_DEFINE(HAS_FLOAT, 1, Define when building with HAS_FLOAT)
+    AC_DEFINE(LINUX, 1, Define when building with LINUX)
+    AC_DEFINE(RTAI, 1, Define when building with RTAI)
+dnl    AC_DEFINE(__RTAI__, 1, Fran's pthread hacks for userspace RTAI)
+
+dnl     GCCPATH="/home/emma/misc/install/buildroot/build_cris/staging_dir/bin"
+dnl     CC=$GCCPATH/cris-linux-gcc
+dnl     CCLD=$GCCPATH/cris-linux-gcc
+
+dnl Hack to find libc.a (needed for setjmp/longjmp if exceptions enabled)
+dnl LIBC_A_PATH="/usr/local/cris/lib/gcc-lib/cris/2.96"
+
+    CC="cris-axis-linux-gcc"
+    J2C_CPPFLAGS="$J2C_CPPFLAGS -DKERNEL -DHOST_CRIS -mlinux"
+    J2C_LDFLAGS="$J2C_LDFLAGS -mcrislinux"
+    J2C_DEFS="$J2C_DEFS"
+dnl  GCCLIBDIR="/usr/local/cris/lib/gcc-lib/cris/2.96/linux"
+    J2C_LDFLAGS="$J2C_LDFLAGS -static " dnl -L $GCCLIBDIR" 
+dnl    J2C_LIBS="$GCCLIBDIR/libgcc.a"
+dnl    J2C_LIBS="temp/test.a"
+
+dnl     AC_SUBST(CCLD)
+dnl    j2c_port=""
+
+  ;;  
+
+dnl --------------------- ARTPEC 4 ------------------------------- 
+dnl Cross compiling to Axis chipset with MIPS 32 and unknown linux distro (Axis made?) with kernel version 2.6.29. 
+dnl Made for Concurrent and Realtime Programming course at LTH, Camera Project. 
+dnl Made to work with ARTPEC 4/MIPS compiler, supplied by Axis and accessed through Axis Development Partner Program.
+dnl Compiler produces:
+dnl ELF 32-bit LSB executable, MIPS, MIPS32 rel2 version 1 (SYSV), for GNU/Linux 2.6.29
+dnl author: Niklas Jonsson 2014-07
+ 	mipsisa32r2el-axis-linux-gnu*) 
+
+dnl 
+    AC_DEFINE(BITS64, 0, Define when building with BITS64)
+	AC_DEFINE(HAS_FLOAT, 0, Define when building with HAS_FLOAT)
+    AC_DEFINE(LINUX, 1, Define when building with LINUX)
+
+
+  ;;
+
+dnl --------------------------------------------------------------
+
+dnl --------------------- BEAGLEBONE BLACK -----------------------
+dnl Cross compiling BeagleBone Black with ARM Cortex A8 and the  Linux distro Ångström. 
+dnl Made for Concurrent and Realtime Programming course at LTH, Alarm clock lab. 
+dnl Made to work with linaro-4.7-2013.03-20130313 and gcc 4.7.3.
+dnl author: Niklas Jonsson 2014-04
+  arm-ti-linux*) 
+
+dnl Copied from cris*, ARM has 32-bit.
+    AC_DEFINE(BITS64, 0, Define when building with BITS64)
+    AC_DEFINE(HAS_FLOAT, 1, Define when building with HAS_FLOAT)
+    AC_DEFINE(LINUX, 1, Define when building with LINUX)
+
+dnl Based on cris* and powerpc-none-elf. Remember to set $PATH and $LIBRARY_PATH when compiling.
+    CC="arm-ti-linux-gnueabi-gcc"
+    CCLD="arm-ti-linux-gnueabihf-ld"
+dnl Only works with statically linked libs
+    J2C_LDFLAGS="$J2C_LDFLAGS -static"
+
+  ;; 
+dnl --------------------------------------------------------------
+
+dnl
+dnl Commented out xenomai host. Not needed for user-space xenomai, 
+dnl and we cannot currently build kernel modules
+dnl
+
+  dnl xenomai on powerpc, about to replace rtai
+dnl   powerpc-xenomai-linux*) 
+dnl     HOST_PPC="yes"
+dnl dnl     HOST_RTAI_KERNEL="yes"
+dnl     HOST_ARCH="ppc"
+dnl     AC_DEFINE(XENO, 1, Define when building with Xenomai)
+dnl dnl     AC_DEFINE(BITS64, 1, Define when building with BITS64)
+dnl     AC_DEFINE(BITS_PER_LONG, 32, Define when building)
+dnl     AC_DEFINE(HAS_FLOAT, 1, Define when building with HAS_FLOAT)
+dnl     AC_DEFINE(LINUX, 1, Define when building with LINUX)
+dnl dnl     GCCPATH="/public/robot/embedded/crosstool/powerpc-603e-linux-gnu/gcc-4.0.1-glibc-2.3.5/powerpc-603e-linux-gnu/bin"
+dnl dnl     CC=$GCCPATH/powerpc-603e-linux-gnu-gcc
+dnl     CCLD=powerpc-posix-linux-gcc
+
+dnl dnl Hack to find libc.a (needed for setjmp/longjmp if exceptions enabled)
+dnl dnl    LIBC_A_PATH="/opt/cross/powerpc-linux/lib"
+
+dnl     J2C_CPPFLAGS="$J2C_CPPFLAGS -DHOST_PPC"
+dnl     J2C_LDFLAGS="$J2C_LDFLAGS -m elf32ppclinux"
+dnl dnl     J2C_DEFS="$J2C_DEFS -DPTHREAD_MUTEX_RECURSIVE=PTHREAD_MUTEX_RECURSIVE_NP"
+dnl dnl    GCCLIBDIR="/opt/cross/lib/gcc-lib/powerpc-linux/2.95.3"
+dnl dnl     GCCLIBDIR="/public/robot/embedded/crosstool/powerpc-603e-linux-gnu/gcc-4.0.1-glibc-2.3.5/powerpc-603e-linux-gnu/lib/gcc/powerpc-603e-linux-gnu/4.0.1"
+dnl     J2C_LDFLAGS="$J2C_LDFLAGS -L $GCCLIBDIR" 
+dnl     J2C_LIBS=""
+dnl     AC_SUBST(CCLD)
+dnl   ;;
+
+
+  dnl pthreads on powerpc
+  powerpc-*-linux*) 
+    HOST_PPC="yes"
+    AC_DEFINE(BITS64, 1, Define when building with BITS64)
+    AC_DEFINE(HAS_FLOAT, 1, Define when building with HAS_FLOAT)
+    AC_DEFINE(LINUX, 1, Define when building with LINUX)
+dnl    AC_DEFINE(RTAI, 1, Define when building with RTAI)
+dnl    AC_DEFINE(__RTAI__, 1, Fran's pthread hacks for userspace RTAI)
+
+dnl     GCCPATH="/home/robot/embedded/crosstool/powerpc-603e-linux-gnu/gcc-3.4.3-glibc-2.3.3/bin"
+dnl 	CC=powerpc-603e-linux-gnu-gcc
+dnl 	CCLD=powerpc-603e-linux-gnu-gcc
+
+dnl Hack to find libc.a (needed for setjmp/longjmp if exceptions enabled)
+dnl     LIBC_A_PATH="/home/robot/embedded/crosstool/powerpc-603e-linux-gnu/gcc-3.4.3-glibc-2.3.3/lib"
+
+    J2C_CPPFLAGS="$J2C_CPPFLAGS -DHOST_PPC"
+    J2C_LDFLAGS="$J2C_LDFLAGS -m elf32ppclinux"
+dnl     J2C_DEFS="$J2C_DEFS -DPTHREAD_MUTEX_RECURSIVE=PTHREAD_MUTEX_RECURSIVE_NP"
+dnl     GCCLIBDIR="/home/robot/embedded/crosstool/powerpc-603e-linux-gnu/gcc-3.4.3-glibc-2.3.3/lib/gcc/powerpc-603e-linux-gnu/3.4.3"
+    J2c_LDFLAGS="$J2C_LDFLAGS -L $GCCLIBDIR" 
+    J2C_LIBS=""
+dnl     AC_SUBST(CCLD)
+  ;;
+
+  dnl How to cross-compile for VxWorks? Do we need both target and
+  dnl thread model, or is a separate target sufficient?
+  *-*-vxworks) 
+    AC_DEFINE(BITS64, 1, Define when building with BITS64)
+    AC_DEFINE(HAS_FLOAT, 1, Define when building with HAS_FLOAT)
+    AC_DEFINE(VXWORKS, 1, Define when building with LINUX)
+dnl     J2C_DEFS="$J2C_DEFS -DPTHREAD_MUTEX_RECURSIVE=PTHREAD_MUTEX_RECURSIVE_NP"
+dnl    J2C_LIBS="-lm"
+dnl    j2c_port="i686-pc-linux-gnu"
+  ;;
+
+  dnl linux stuff.
+  *-*-linux*) 
+    AC_DEFINE(BITS64, 1, Define when building with BITS64)
+    AC_DEFINE(HAS_FLOAT, 1, Define when building with HAS_FLOAT)
+    AC_DEFINE(LINUX, 1, Define when building with LINUX)
+dnl     J2C_DEFS="$J2C_DEFS -DPTHREAD_MUTEX_RECURSIVE=PTHREAD_MUTEX_RECURSIVE_NP"
+dnl    J2C_LIBS="-lm"
+dnl    j2c_port="i686-pc-linux-gnu"
+  ;;
+
+  dnl powerpc-none-elf is stork. Hmm. This is no good.
+  powerpc-none-elf)
+    HOST_STORK="yes"
+    AC_DEFINE(BITS64, 1, Define when building with BITS64)
+    AC_DEFINE(HAS_FLOAT, 1, Define when building with HAS_FLOAT)
+    dnl CFLAGS is sent to the linker as well, and -f is not legal
+    dnl (in some cases at least). Maybe this should be fixed in
+    dnl Makefile.am?
+    dnl J2C_CFLAGS="$J2C_CFLAGS -O5 -fvolatile -fvolatile-global"
+    FLAGS="$FLAGS -DSTORK_PPC -Dprintf=cprintf"
+    GCCPATH="/usr/common/programs/gcc-ppc/bin"
+    GCCLIBDIR="/usr/common/programs/gcc-ppc/lib/gcc-lib/ppc-elf/3.2"
+    CC=$GCCPATH/ppc-elf-gcc
+    CCLD=$GCCPATH/ppc-elf-ld
+    STORKDIR="\$(J2C_HOME)/gc/stork"
+    STORKLINK="-T $STORKDIR/ppc/ppc.link"
+
+
+    J2C_LDFLAGS="$J2C_LDFLAGS -L $GCCLIBDIR -L $STORKDIR/ppc/compiled/ppc" 
+    J2C_LDFLAGS="$J2C_LDFLAGS $STORKLINK"
+
+    J2C_LIBS="-lmodula -lm -lc -lgcc "
+
+    J2C_CPPFLAGS="$J2C_CPPFLAGS -I $STORKDIR/ppc/compiled/ppc"
+
+    AC_SUBST(CCLD)
+    AC_SUBST(STORKDIR)
+    AC_SUBST(STORKLINK)
+    AC_SUBST(GCCLIBDIR)
+
+dnl    j2c_port="powerpc-none-elf_stork"
+  ;;
+  dnl AVR stuff
+  avr-atmel-elf)
+    HOST_AVR="yes"
+    AC_DEFINE(BITS64, 0, Define when building with BITS64)
+    AC_DEFINE(HAS_FLOAT, 1, Define when building with HAS_FLOAT)
+    AC_DEFINE(HOST_AVR, 1, Define when building for AVR)
+    CCASFLAGS="-c -mmcu=atmega128 -Wa,-gstabs -mmcu=atmega128"
+dnl Compiling with Optimization causes errors!!!
+dnl    J2C_CFLAGS="-w -mmcu=atmega128 -O1 -DJAVA_STACK_SIZE=712"
+dnl Enough stack space for three java threads (including JavaMain)
+dnl    J2C_CFLAGS="-w -mmcu=atmega128 -DJAVA_STACK_SIZE=960"
+dnl Enough stack space for four java threads (including JavaMain)
+dnl    J2C_CFLAGS="-w -mmcu=atmega128 -DJAVA_STACK_SIZE=760"
+    J2C_CFLAGS="-w -mmcu=atmega128 -DJAVA_STACK_SIZE=1024"
+dnl    J2C_CFLAGS="-w -mmcu=atmega128 -DJAVA_STACK_SIZE=835"
+dnl    J2C_CFLAGS="-w -mmcu=atmega128 -DJAVA_STACK_SIZE=920"
+dnl    J2C_CFLAGS="-w -mmcu=atmega128 -O1 -DJAVA_STACK_SIZE=835"
+    CC="avr-gcc"
+    CCAS="avr-gcc -x assembler-with-cpp"
+    LD="avr-gcc"
+    AR=avr-ar
+    RANLIB=avr-ranlib
+
+    AC_SUBST(TOBBEDIR)
+    AC_SUBST(CCAS)
+    AC_SUBST(CCASFLAGS)
+  ;;
+dnl And, this is the sun-solaris stuff
+  sparc-sun-solaris2.8) 
+    AC_DEFINE(BITS64, 1, Define when building with BITS64)
+    AC_DEFINE(HAS_FLOAT, 1, Define when building with HAS_FLOAT)
+	J2C_LIBS="$J2C_LIBS -lpthread -lrt"
+	J2C_DEFS="$J2C_DEFS -D__SOLARIS__"
+dnl    j2c_port="sparc-sun-solaris2.8"
+  ;;
+  dnl And, this is cygwin <shrug>
+  i*-*-cygwin) 
+    HOST_CYGWIN="yes"
+    AC_DEFINE(BITS64, 1, Define when building with BITS64)
+    AC_DEFINE(HAS_FLOAT, 1, Define when building with HAS_FLOAT)
+dnl    j2c_port="sparc-sun-solaris2.8"
+  ;;
+  *) AC_MSG_ERROR(No support for $host) ;;
+esac
+J2C_CPPFLAGS="$J2C_CPPFLAGS $HOST_CPPFLAGS"
+
+dnl **** HERE BE DRAGONS! *****
+dnl **** These conditionals below really have to do with the thread
+dnl **** model used. There is a bit of general confusion between
+dnl **** host selection and thread model (since these are not orthogonal)
+dnl **** this really should be cleared up.
+
+AM_CONDITIONAL(HOST_STORK, test "x$HOST_STORK" = "xyes")
+AM_CONDITIONAL(HOST_AVR, test "x$HOST_AVR" = "xyes")
+AM_CONDITIONAL(HOST_CYGWIN, test "x$HOST_CYGWIN" = "xyes")
+AM_CONDITIONAL(HOST_RTAI_KERNEL, test "x$HOST_RTAI_KERNEL" = "xyes")
+
+dnl ------------------------------------------------------------
+dnl Set default flags
+dnl ------------------------------------------------------------
+dnl Note, these options are not set for the CFLAGS and CPPFLAGS
+dnl before we have performed the feature set.
+dnl TODO: Check that the compiler actually supports -ggdb
+dnl J2C_CFLAGS="$J2C_CFLAGS -ggdb"
+dnl J2C_CPPFLAGS="$J2C_CPPFLAGS"
+
+
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+dnl Build options
+dnl Eventually we will need to set all configure options at this
+dnl stage. Users will have to do a make distclean && configure 
+dnl again, if they wish to reconfigure
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+
+dnl ------------------------------------------------------------
+dnl Sourcelines - include source line information in the
+dnl generated C code.
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(sourcelines,
+   [  --enable-sourcelines      Turn on source line info @<:@NO@:>@],
+   [case "${enableval}" in
+     yes) J2C_JAVA2CFLAGS="$J2C_JAVA2CFLAGS --sourcelines"
+	  AC_DEFINE(J2C_SOURCELINES, 1, Set to turn on source line info)
+	;;
+     no)  ;;
+     *) AC_MSG_ERROR(bad value ${enableval} for --enable-profile) ;;
+   esac])
+
+
+dnl ------------------------------------------------------------
+dnl Lets have a debug option - not currently used.
+dnl Use as a template for future options
+dnl ------------------------------------------------------------
+     AC_ARG_ENABLE(debug,
+     AC_HELP_STRING(--enable-debug, Turn on debugging @<:@NO@:>@),
+     [case "${enableval}" in
+       yes) debug=true
+	 J2C_CFLAGS="$CFLAGS"dnl No optimizations when debug is enabled
+	   ;;
+       no)  debug=false
+	 AC_DEFINE(GC_NODEBUG, 1, Set to turn off the debug layer)
+       ;;
+       *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
+     esac],[
+	debug=false 
+	AC_DEFINE(GC_NODEBUG, 1, Set to turn off the debug layer)
+     ])
+     AM_CONDITIONAL(DEBUG, test x$debug = xtrue)
+
+dnl ------------------------------------------------------------
+dnl Profiling
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(profile,
+   [  --enable-profile        Turn on profiling (some platforms only) @<:@NO@:>@],
+   [case "${enableval}" in
+dnl     yes) J2C_CFLAGS="$J2C_CFLAGS -pg -a" ;;
+dnl	-a is for recording profiling information per basic block
+     yes) J2C_CFLAGS="$J2C_CFLAGS -pg " 
+	  AC_DEFINE(GC_PROFILING, 1, Set to turn on GC profiling)
+	;;
+     no)  ;;
+     *) AC_MSG_ERROR(bad value ${enableval} for --enable-profile) ;;
+   esac])
+
+dnl ------------------------------------------------------------
+dnl Build options (thread, file, etc)
+dnl ------------------------------------------------------------
+
+dnl ------------------------------------------------------------
+dnl The Thread option (adds native)
+dnl ------------------------------------------------------------
+AC_ARG_WITH(thread, 
+  AC_HELP_STRING(--with-thread=type, Thread type (none|pthread|xenomai|stork|tobbe|t2|rtaikernel|lxrt) @<:@pthread@:>@),
+  [case "${withval}" in
+    none|pthread|xenomai|stork|tobbe|t2|rtaikernel|lxrt) THREAD=$withval ;;
+    *) AC_MSG_ERROR(bad value ${withval} for --with-thread) ;;
+   esac], [THREAD=none])
+AC_SUBST(THREAD)
+dnl Take care of the dir stuff.
+dnl SUBDIR_THREAD="thread_$THREAD"
+dnl AC_SUBST(SUBDIR_THREAD)
+dnl CONFIG_BUILDDIRS="$CONFIG_BUILDDIRS $SUBDIR_THREAD"
+dnl CONFIG_DISTDIRS="$CONFIG_DISTDIRS thread_pthread/ thread_stork/"
+dnl And the native files
+dnl NATIVEFILES="$NATIVEFILES \$(top_srcdir)/src/$SUBDIR_THREAD/$THREAD.native" 
+
+dnl ------------------------------------------------------------
+dnl The heapsize option
+dnl ------------------------------------------------------------
+AC_ARG_WITH(heapsize, 
+  AC_HELP_STRING(--with-heapsize=size, heap size (size in bytes) @<:@1000000@:>@),
+  [case "${withval}" in
+    changequote(<<, <<)dnl 
+    *[0-9]) GC_HEAPSIZE=$withval ;;
+    +[0-9]\*+[0-9]) GC_HEAPSIZE=$withval ;;
+    changequote([, ])dnl 
+    *) AC_MSG_ERROR(bad value ${withval} for --with-heapsize) ;;
+   esac], [GC_HEAPSIZE=1000000])
+AC_DEFINE_UNQUOTED(GC_HEAPSIZE, ($GC_HEAPSIZE), Size of GC heap)
+dnl ------------------------------------------------------------
+dnl The Gc option
+dnl ------------------------------------------------------------
+AC_ARG_WITH(gc, 
+  AC_HELP_STRING(--with-gc=type, GC type (batch_copy|incremental_ms|nonmoving|incremental_copy) @<:@incremental_ms@:>@),
+  [case "${withval}" in
+    batch_copy|incremental_ms|nonmoving|incremental_copy) GC=$withval ;;
+    *) AC_MSG_ERROR(bad value ${withval} for --with-gc) ;;
+   esac], [GC=incremental_ms])
+dnl Take care of the dir stuff.
+dnl SUBDIR_GC="gc_$GC"
+dnl AC_SUBST(SUBDIR_GC)
+dnl CONFIG_BUILDDIRS="$CONFIG_BUILDDIRS $SUBDIR_GC"
+dnl CONFIG_DISTDIRS="$CONFIG_DISTDIRS gc_incremental_ms/ gc_incremental_ms_bengtsson/ \
+dnl gc_batch_copy/"
+
+dnl ------------------------------------------------------------
+dnl Set path to Linux source
+dnl ------------------------------------------------------------
+AC_ARG_WITH(linux-path, 
+  AC_HELP_STRING(--with-linux-path=linuxpath, Path to Linux source @<:@/usr/src/linux@:>@),
+  LINUX_PATH=${withval}, [LINUX_PATH=/usr/src/linux])
+  AC_SUBST(LINUX_PATH)
+dnl FLAGS="$FLAGS -I$LINUX_PATH/include"
+
+dnl ------------------------------------------------------------
+dnl Set path to RTAI source, should be removed in favor of Xenomai
+dnl ------------------------------------------------------------
+AC_ARG_WITH(rtai-path, 
+  AC_HELP_STRING(--with-rtai-path=rtaipath, Path to RTAI source @<:@/usr/src/rtai@:>@),
+  RTAI_PATH=${withval}, [RTAI_PATH=/usr/src/rtai])
+  AC_SUBST(RTAI_PATH)
+dnl FLAGS="$FLAGS -I$RTAI_PATH/include"
+
+dnl ------------------------------------------------------------
+dnl Set path to Xenomai source
+dnl ------------------------------------------------------------
+AC_ARG_WITH(xenolib-path, 
+  AC_HELP_STRING(--with-xenolib-path=xenomai-lib-path, Path to Xenomai libraries @<:@/usr/src/xenomai@:>@),
+  XENO_LIB_PATH=${withval}, [XENO_LIB_PATH=/usr/src/xenomai])
+  AC_SUBST(XENO_LIB_PATH)
+dnl FLAGS="$FLAGS -I$RTAI_PATH/include"
+
+dnl ------------------------------------------------------------
+dnl Exceptions, requires threads
+dnl ------------------------------------------------------------
+AC_ARG_WITH(exceptions,
+  AC_HELP_STRING(--with-exceptions, Exception implementation (setjmp|goto|none) @<:@goto@:>@),
+  [case "${withval}" in
+    none|setjmp|goto) EXCEPTION=$withval ;;
+    *) AC_MSG_ERROR(bad value ${withval} for --with-exceptions) ;;
+   esac], [EXCEPTION=goto])
+
+dnl     yes) if test "x$THREAD" = "xpthread" ; then
+dnl 	AC_DEFINE(HAS_EXCEPTIONS, 1, Set to turn on exceptions) 
+dnl         elif test "x$THREAD" = "xxenomai" ; then
+dnl 	AC_DEFINE(HAS_EXCEPTIONS, 1, Set to turn on exceptions) 
+dnl         elif test "x$THREAD" = "xrtaikernel" ; then
+dnl 	AC_DEFINE(HAS_EXCEPTIONS, 1, Set to turn on exceptions) 
+dnl 	J2C_LIBS="$J2C_LIBS $LIBC_A_PATH/libc.a"
+dnl 	else
+dnl 	  AC_MSG_ERROR(--enable-exceptions requires threads)
+dnl 	fi
+dnl     ;;
+dnl     no)	AC_DEFINE(HAS_EXCEPTIONS, 0, Set to turn off exceptions) 
+dnl  ;;
+dnl     *) AC_MSG_ERROR(bad value ${enableval} for --enable-exceptions) ;;
+dnl esac],[	if test "x$THREAD" = "xpthread" ; then 
+dnl 	AC_DEFINE(HAS_EXCEPTIONS, 1, Set to turn on exceptions) 
+dnl         elif test "x$THREAD" = "xrtaikernel" ; then 
+dnl 	AC_DEFINE(HAS_EXCEPTIONS, 1, Set to turn on exceptions) 
+dnl 	J2C_LIBS="$J2C_LIBS $LIBC_A_PATH/libc.a"
+dnl 	fi]
+dnl )
+
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+dnl Select thread model 
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+
+if test "x$THREAD" = "xpthread" ; then
+  AC_DEFINE(GC_THREAD, 1, Thread model, see gc.h for details)
+  J2C_LIBS="$J2C_LIBS -lpthread"
+dnl  J2C_DEFS="$J2C_DEFS -DPTHREAD_MUTEX_RECURSIVE=PTHREAD_MUTEX_RECURSIVE_NP"
+  HAS_THREADS="yes"
+fi   
+if test "x$THREAD" = "xstork" ; then
+  AC_DEFINE(GC_THREAD, 2, Thread model. see gc.h for details)
+  HAS_THREADS="yes"
+fi   
+if test "x$THREAD" = "xtobbe" ; then
+  AC_DEFINE(GC_THREAD, 3, Thread model. see gc.h for details)
+  HAS_THREADS="yes"
+fi   
+if test "x$THREAD" = "xt2" ; then
+  AC_DEFINE(GC_THREAD, 6, Thread model. see gc.h for details)
+  HAS_THREADS="yes"
+fi   
+if test "x$THREAD" = "xrtaikernel" ; then
+  AC_DEFINE(GC_THREAD, 4, Thread model. see gc.h for details)
+  HAS_THREADS="yes"
+dnl hack! how to do this properly?
+if test "x$host_cpu" = "xi686"; then
+  CCLD=ld
+  AC_SUBST(CCLD)
+fi
+
+
+  HOST_RTAI_KERNEL="yes"
+  J2C_CPPFLAGS="$J2C_CPPFLAGS -D__KERNEL__ -DMODULE -DMODVERSIONS"
+  J2C_CPPFLAGS="$J2C_CPPFLAGS -DHOST_RTAI_KERNEL"
+  J2C_CPPFLAGS="$J2C_CPPFLAGS -I$LINUX_PATH/include" 
+  J2C_CPPFLAGS="$J2C_CPPFLAGS -I$RTAI_PATH/include"
+  J2C_CPPFLAGS="$J2C_CPPFLAGS -I$LINUX_PATH/include/linux"
+  J2C_CPPFLAGS="$J2C_CPPFLAGS -include $LINUX_PATH/include/linux/modversions.h"
+  J2C_CPPFLAGS="$J2C_CPPFLAGS -O2 -Dprintf=printk "
+  J2C_LDFLAGS="$J2C_LDFLAGS -r"
+dnl if test "x$host_cpu" = "xcris"; then
+dnl    J2C_LIBS="$J2C_LIBS $LINUX_PATH/arch/cris/kernel/ksyms.o -lgcc"
+dnl  fi
+fi   
+dnl if test "x$THREAD" = "xlxrt" ; then
+dnl   AC_DEFINE(GC_THREAD, 5, Thread model. see gc.h for details)
+dnl   HAS_THREADS="yes"
+dnl   J2C_CPPFLAGS="$J2C_CPPFLAGS -I$LINUX_PATH/include" 
+dnl   J2C_CPPFLAGS="$J2C_CPPFLAGS -I$RTAI_PATH/include"
+dnl   dnl Why is -lpthread needed below???? AnedrsN
+dnl   J2C_LIBS="$J2C_LIBS -lrtai -lpthread" 
+dnl   J2C_LDFLAGS="$J2C_LDFLAGS -L $RTAI_PATH/lib -static" 
+dnl fi   
+if test "x$THREAD" = "xxenomai" ; then
+  AC_DEFINE(GC_THREAD, 5, Thread model. see gc.h for details)
+  HAS_THREADS="yes"
+  J2C_CPPFLAGS="$J2C_CPPFLAGS -I$LINUX_PATH/include -I$LINUX_PATH/include/xenomai" 
+dnl   J2C_CPPFLAGS="$J2C_CPPFLAGS -I$RTAI_PATH/include"
+  J2C_LIBS="$J2C_LIBS -lnative" 
+  J2C_LDFLAGS="$J2C_LDFLAGS -L $XENO_LIB_PATH" 
+fi   
+
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+dnl Select Exception implementation
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+if test "x$HAS_THREADS" = "xyes" ; then
+   if test "x$EXCEPTION" = "xsetjmp" ; then
+      AC_DEFINE(HAS_EXCEPTIONS, 1, Set to turn on exceptions. See exception.h for details) 
+   elif test "x$EXCEPTION" = "xgoto" ; then
+      AC_DEFINE(HAS_EXCEPTIONS, 2, Set to turn on exceptions. See exception.h for details) 
+   fi
+fi
+
+
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+dnl Select garbage collector
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+if test "x$GC" = "xbatch_copy" ; then
+  AC_DEFINE(GC_ALGORITHM, 1, Which GC algorithm to use. see gc.h for details) 
+  GC_INCREMENTAL="no"
+elif test "x$GC" = "xincremental_ms" ; then
+  AC_DEFINE(GC_ALGORITHM, 2, Which GC algorithm to use. see gc.h for details) 
+elif test "x$GC" = "xnonmoving" ; then
+  AC_DEFINE(GC_ALGORITHM, 4, Which GC algorithm to use. see gc.h for details) 
+elif test "x$GC" = "xincremental_copy" ; then
+  AC_DEFINE(GC_ALGORITHM, 5, Which GC algorithm to use. see gc.h for details) 
+fi
+
+AM_CONDITIONAL(GC_BATCH_COPY, test "x$GC" = "xbatch_copy")
+AM_CONDITIONAL(GC_INCREMENTAL_MS, test "x$GC" = "xincremental_ms")
+AM_CONDITIONAL(GC_NONMOVING, test "x$GC" = "xnonmoving")
+AM_CONDITIONAL(GC_INCREMENTAL_COPY, test "x$GC" = "xincremental_copy")
+
+
+dnl ------------------------------------------------------------
+dnl Some off/on options 
+dnl ------------------------------------------------------------
+
+dnl ------------------------------------------------------------
+dnl Threads, also turns off the debug layer (which isn't thread safe)
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(threads,
+  AC_HELP_STRING(--enable-threads, Set if threads @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) AC_DEFINE(GC_HAS_THREADS, 1, Set if threads enabled) 
+	 AC_DEFINE(GC_NODEBUG, 1, Set to turn off the debug layer)
+    ;;
+    no)  THREAD=none
+dnl AC_MSG_ERROR(--disable-threads doesn't work at the moment. sorry.)
+    ;;
+
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-threads) ;;
+esac],[AC_DEFINE(GC_HAS_THREADS, 1, Set if threads enabled)  
+	 AC_DEFINE(GC_NODEBUG, 1, Set to turn off the debug layer) 
+  ]
+)
+
+dnl ------------------------------------------------------------
+dnl Exceptions, requires threads
+dnl ------------------------------------------------------------
+dnl AC_ARG_ENABLE(exceptions,
+dnl   AC_HELP_STRING(--enable-exceptions, Set if using exceptions @<:@YES@:>@),
+dnl   [case "${enableval}" in
+dnl     yes) if test "x$THREAD" = "xpthread" ; then
+dnl 	AC_DEFINE(HAS_EXCEPTIONS, 1, Set to turn on exceptions) 
+dnl         elif test "x$THREAD" = "xxenomai" ; then
+dnl 	AC_DEFINE(HAS_EXCEPTIONS, 1, Set to turn on exceptions) 
+dnl         elif test "x$THREAD" = "xrtaikernel" ; then
+dnl 	AC_DEFINE(HAS_EXCEPTIONS, 1, Set to turn on exceptions) 
+dnl 	J2C_LIBS="$J2C_LIBS $LIBC_A_PATH/libc.a"
+dnl 	else
+dnl 	  AC_MSG_ERROR(--enable-exceptions requires threads)
+dnl 	fi
+dnl     ;;
+dnl     no)	AC_DEFINE(HAS_EXCEPTIONS, 0, Set to turn off exceptions) 
+dnl  ;;
+dnl     *) AC_MSG_ERROR(bad value ${enableval} for --enable-exceptions) ;;
+dnl esac],[	if test "x$THREAD" = "xpthread" ; then 
+dnl 	AC_DEFINE(HAS_EXCEPTIONS, 1, Set to turn on exceptions) 
+dnl         elif test "x$THREAD" = "xrtaikernel" ; then 
+dnl 	AC_DEFINE(HAS_EXCEPTIONS, 1, Set to turn on exceptions) 
+dnl 	J2C_LIBS="$J2C_LIBS $LIBC_A_PATH/libc.a"
+dnl 	fi]
+dnl )
+
+dnl ------------------------------------------------------------
+dnl Java2C compiler debug option: Verbose mode
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(verbose,
+  AC_HELP_STRING(--enable-verbose, Set to enable verbose mode in ljrt compiler @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) J2C_VERBOSE="yes"
+    ;;
+    no)  J2C_VERBOSE="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-verbose) 
+    ;;
+esac],[if test "x$J2C_VERBOSE" = "x"; then J2C_VERBOSE="no"; fi]
+)
+if test "x$J2C_VERBOSE" = "xyes" ; then 
+	J2C_JAVA2CFLAGS="$J2C_JAVA2CFLAGS -verbose"
+fi
+
+dnl ------------------------------------------------------------
+dnl Java2C compiler optimization: only PUSH unique roots
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(no-redundant-roots,
+  AC_HELP_STRING(--enable-no-redundant-roots, Set to enable root optimization in the Java2C compiler @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) J2C_NO_REDUNDANT_ROOTS="yes"
+    ;;
+    no)  J2C_NO_REDUNDANT_ROOTS="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-no-redundant-roots) 
+    ;;
+esac],[if test "x$J2C_NO_REDUNDANT_ROOTS" = "x"; then J2C_NO_REDUNDANT_ROOTS="yes"; fi]
+)
+if test "x$J2C_NO_REDUNDANT_ROOTS" = "xyes" ; then 
+	J2C_JAVA2CFLAGS="$J2C_JAVA2CFLAGS --noredundantpush"
+fi
+
+dnl ------------------------------------------------------------
+dnl Should the GC be incremental
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(gc-incremental,
+  AC_HELP_STRING(--enable-gc-incremental, Set if the GC is incremental @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) GC_INCREMENTAL="yes"
+    ;;
+    no)  GC_INCREMENTAL="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gc-incremental) 
+    ;;
+esac],[if test "x$GC_INCREMENTAL" = "x"; then GC_INCREMENTAL="yes"; fi]
+)
+if test "x$GC_INCREMENTAL" = "xyes" ; then 
+	AC_DEFINE(GC_IS_INCREMENTAL, 1, Set to run GC incrementally) 
+fi
+
+dnl ------------------------------------------------------------
+dnl Should the GC implement finalizers
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(gc-finalizers,
+  AC_HELP_STRING(--enable-gc-finalizers, Set if the GC has finalizers @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) GC_FINALIZERS="yes"
+    ;;
+    no)  GC_FINALIZERS="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gc-finalizers) 
+    ;;
+esac],[GC_FINALIZERS="yes"]
+)
+if test "x$GC_FINALIZERS" = "xyes" ; then 
+	AC_DEFINE(GC_HAS_FINALIZERS, 1, Set to turn on GC finalizers) 
+fi
+
+dnl ------------------------------------------------------------
+dnl Enable lazy GET_THREAD_ROOT
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(gc-lazy-get-thread-root,
+  AC_HELP_STRING(--enable-gc-lazy-get-thread-root, Set to enable GET_THREAD_ROOT optimization @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) GC_LAZY_GTR="yes"
+    ;;
+    no)  GC_LAZY_GTR="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gc-lazy-get-thred-root) 
+    ;;
+esac],[GC_LAZY_GTR="yes"]
+)
+if test "x$GC_LAZY_GTR" = "xyes" ; then 
+	AC_DEFINE(GC_LAZY_GET_THREAD_ROOT, 1, Set to enable GET_THREAD_ROOT optimization) 
+fi
+
+dnl ------------------------------------------------------------
+dnl Should the GC print warnings (e.g., out of memory)
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(gc-warnings,
+  AC_HELP_STRING(--enable-gc-warnings, Set if the GC should print warnings @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) GC_WARNINGS="yes"
+    ;;
+    no)  GC_WARNINGS="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gc-warnings) 
+    ;;
+esac],[GC_WARNINGS="no"]
+)
+if test "x$GC_WARNINGS" = "xyes" ; then 
+	AC_DEFINE(GC_PRINT_WARNINGS, 1, Set to turn on GC warnings) 
+fi
+
+dnl ------------------------------------------------------------
+dnl Should the GC print debug messages 
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(gc-debug,
+  AC_HELP_STRING(--enable-gc-debug, Set if the GC should print debug messages @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) GC_PRINT_DEBUG="yes"
+    ;;
+    no)  GC_PRINT_DEBUG="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gc-warnings) 
+    ;;
+esac],[GC_PRINT_DEBUG="no"]
+)
+if test "x$GC_PRINT_DEBUG" = "xyes" ; then 
+	AC_DEFINE(GC_PRINT_DEBUG, 1, Set to turn on GC warnings) 
+fi
+
+dnl ------------------------------------------------------------
+dnl Use reference call of references
+dnl If all parameters that are passed to functions are rooted
+dnl in the callers context, they don't have to be copied and
+dnl rooted in the context of the callee. This reduces overhead
+dnl as no GC_LOCK/UNLOCK has to be done at method calls to protect
+dnl the arguments
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(gc-ref-call-references,
+  AC_HELP_STRING(--enable-gc-ref-call-references, Set to use reference call for reference parameters @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) GC_REF_REF_CALL="yes"
+    ;;
+    no)  GC_REF_REF_CALL="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gc-incremental) 
+    ;;
+esac],[if test "x$GC_REF_REF_CALL" = "x"; then GC_REF_REF_CALL="yes"; fi]
+)
+if test "x$GC_REF_REF_CALL" = "xyes" ; then 
+	AC_DEFINE(GC__REF_CALL_PARAMS, 1, Set to reference call ref params) 
+fi
+
+dnl ------------------------------------------------------------
+dnl Turn on sanity checks of the nonmoving GC 
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(sanity-checks,
+  AC_HELP_STRING(--enable-sanity-checks, Set to turn on heap and pointer sanity checks (gc-nonmoving) @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) SANITYCHECKS="yes"
+    ;;
+    no)  SANITYCHECKS="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-sanity-checks) 
+    ;;
+esac],[SANITYCHECKS="no"]
+)
+if test "x$GC" = "xnonmoving"; then
+if test "x$SANITYCHECKS" = "xyes" ; then 
+	AC_DEFINE(SANITY_CHECKS, 1, Set to turn on heap and pointer sanity checks (only for nonmoving GC)) 
+fi
+fi
+
+dnl ------------------------------------------------------------
+dnl Use powers-of-two block sizes in the (allocator used by the) nonmoving GC 
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(power-of-two-align,
+  AC_HELP_STRING(--enable-power-of-two-align, Set to use powers-of-two block sizes (gc-nonmoving) @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) POWERSOFTWO="yes"
+    ;;
+    no)  POWERSOFTWO="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-power-of-two-align) 
+    ;;
+esac],[POWERSOFTWO="no"]
+)
+if test "x$GC" = "xnonmoving"; then
+if test "x$SPOWERSOFTWO" = "xyes" ; then 
+	AC_DEFINE(POWER_OF_TWO_ALIGN, 1, Set to use powers-of-two block sizes (only for nonmoving GC)) 
+fi
+fi
+
+dnl ------------------------------------------------------------
+dnl Should the allocator of the nonmoving GC attempt to
+dnl coalesce adjacent free blocks
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(alloc-coalesce,
+  AC_HELP_STRING(--enable-alloc-coalesce, Set if free blocks should be coalesced (gc-nonmoving) @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) ALLOC_COALESCE="yes"
+    ;;
+    no)  ALLOC_COALESCE="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-alloc-coalesce) 
+    ;;
+esac],[ALLOC_COALESCE="yes"]
+)
+if test "x$GC" = "xnonmoving"; then
+if test "x$ALLOC_COALESCE" = "xyes" ; then 
+	AC_DEFINE(ALLOC_COALESCE, 1, Set to turn on free block coalescing (only for nonmoving GC)) 
+fi
+fi
+
+dnl ------------------------------------------------------------
+dnl Should the nonmoving GC attempt to coalesce contigous
+dnl dead objects before calling free
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(coalesce-dead,
+  AC_HELP_STRING(--enable-coalesce-dead, Set if contigous dead objects should be coalesced b/f calling free (gc-nonmoving) EXPERIMENTAL @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) COALESCE_DEAD="yes"
+    ;;
+    no)  COALESCE_DEAD="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-coalesce-dead) 
+    ;;
+esac],[ALLOC_COALESCE="no"]
+)
+if test "x$GC" = "xnonmoving"; then
+if test "x$COALESCE_DEAD" = "xyes" ; then 
+	AC_DEFINE(GC_FREE_CONTIGOUS_HACK, 1, Set to turn on coalescing of contihous dead objects b/f free (only for nonmoving GC)) 
+	AC_DEFINE(INIT_ON_GC, 1, Do memory initialization in GC (only for nonmoving GC))
+fi
+fi
+
+dnl ------------------------------------------------------------
+dnl Should the memory allocator initialize memory on free or
+dnl att allocation time
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(init-on-free,
+  AC_HELP_STRING(--init-on-free, Set if allocator should initialize memory on free (disable to do initalization at allocation time) (gc-nonmoving) @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) INITONFREE="yes"
+    ;;
+    no)  INITONFREE="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-init-on-free) 
+    ;;
+esac],[INITONFREE="dfl"]
+)
+if test "x$GC" = "xnonmoving"; then
+dnl hack... the default value depends on if coalesce-dead is set or not.
+if test "x$INITONFREE" = "xdfl" ; then 
+ 	if test "x$COALESCE_DEAD" = "xyes" ; then 
+	INITONFREE="no"
+	else
+	INITONFREE="yes"
+ 	fi
+fi
+if test "x$INITONFREE" = "xyes" ; then 
+	if test "x$INITONALLOC" = "xyes" ; then
+ 	AC_MSG_ERROR(conflicting init-on-free and init-on-alloc)
+ 	fi
+ 	if test "x$COALESCE_DEAD" = "xyes" ; then 
+ 	AC_MSG_WARN(init-on-free redundant when using coalesce-dead)
+ 	fi
+ 	AC_DEFINE(INIT_ON_FREE, 1, Do memory initialization in allocator on free (only for nonmoving GC))
+else
+ 	if test "x$COALESCE_DEAD" != "xyes" ; then 
+ 	AC_DEFINE(INIT_ON_ALLOC, 1, Do memory initialization in allocator on allocation (only for nonmoving GC))
+	fi
+fi
+fi
+
+dnl ------------------------------------------------------------
+dnl Should the memory allocator initialize memory on allocation
+dnl ------------------------------------------------------------
+dnl AC_ARG_ENABLE(init-on-alloc,
+dnl   AC_HELP_STRING(--init-on-alloc, Set if allocator should initialize memory on allocation (gc-nonmoving) @<:@NO@:>@),
+dnl   [case "${enableval}" in
+dnl     yes) INITONALLOC="yes"
+dnl     ;;
+dnl     no)  INITONALLOC="no"
+dnl     ;;
+dnl     *) AC_MSG_ERROR(bad value ${enableval} for --enable-init-on-alloc) 
+dnl     ;;
+dnl esac],[INITONALLOC="no"]
+dnl )
+
+
+dnl ------------------------------------------------------------
+dnl Java2C compiler optimization: Allow for de-virtualizad
+dnl method calls if no overriding methods are found.
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(devirtualize,
+  AC_HELP_STRING(--enable-devirtualize, Set to enable static method calls where there are no overriding implementations @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) J2C_DEVIRTUALIZE="yes"
+    ;;
+    no)  J2C_DEVIRTUALIZE="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-devirtualize) 
+    ;;
+esac],[if test "x$J2C_DEVIRTUALIZE" = "x"; then J2C_DEVIRTUALIZE="no"; fi]
+)
+if test "x$J2C_DEVIRTUALIZE" = "xyes" ; then 
+	J2C_JAVA2CFLAGS="$J2C_JAVA2CFLAGS --devirtualize"
+fi
+
+dnl ------------------------------------------------------------
+dnl Experimental optimizations 
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(no-gc-locking,
+  AC_HELP_STRING(--enable-no-gc-locking, EXPERIMENTAL @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) GC_NO_GC_LOCKING="yes"
+    ;;
+    no)  GC_NO_GC_LOCKING="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-alloc-coalesce) 
+    ;;
+esac],[GC_NO_GC_LOCKING="no"]
+)
+if test "x$GC_NO_GC_LOCKING" = "xyes" ; then 
+	AC_DEFINE(GC_NO_GC_LOCKING, 1, EXPERIMENTAL) 
+fi
+
+AC_ARG_ENABLE(no-root-locking,
+  AC_HELP_STRING(--enable-no-root-locking, EXPERIMENTAL @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) GC_NO_ROOT_LOCKING="yes"
+    ;;
+    no)  GC_NO_ROOT_LOCKING="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-alloc-coalesce) 
+    ;;
+esac],[GC_NO_ROOT_LOCKING="no"]
+)
+if test "x$GC_NO_ROOT_LOCKING" = "xyes" ; then 
+	AC_DEFINE(GC_MARK_ROOTS_ATOMIC, 1, EXPERIMENTAL) 
+fi
+
+dnl ------------------------------------------------------------
+dnl Enables cpu usage statistics : use "cat /proc/time_measure" to view result
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(cpu-utilization-logging,
+  AC_HELP_STRING(--enable-cpu-utilization-logging, Set if logging @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) CPU_UTILIZATION_LOGGING="yes"
+	 AC_DEFINE(CPU_UTILIZATION_LOGGING, 1, Set to enable cpu logging) ;;
+    no) CPU_UTILIZATION_LOGGING="no" ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-cpu-utilization-logging) ;;
+esac],[CPU_UTILIZATION_LOGGING="no"]
+)
+AM_CONDITIONAL(ENABLE_CPU_UTILIZATION_LOGGING, test "x$CPU_UTILIZATION_LOGGING" = "xyes")
+   
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+dnl Sven's strange hacks.
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(logging,
+  AC_HELP_STRING(--enable-logging, Set to enable logging @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) AC_DEFINE(LOGGING, 1, set to enable logging (only works with ivm threads)) ;;
+    no)  ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-logging) ;;
+esac])
+
+AC_ARG_ENABLE(gc-time-metric,
+  AC_HELP_STRING(--enable-gc-time-metric, Set to use the time-triggered GC @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) AC_DEFINE(TIME_METRIC, 1, set to use the time-triggered GC ) ;;
+    no)  ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gc-time-metric) ;;
+esac])
+
+AC_ARG_ENABLE(gc-only-time,
+  AC_HELP_STRING(--enable-gc-only-time, Set to use use time as the sole GC trigger and no work metric GC @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) SCHED_ONLY_TIME="yes"
+    ;;
+    no)  SCHED_ONLY_TIME="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gc-only-time) 
+    ;;
+esac],[if test "x$SCHED_ONLY_TIME" = "x"; then SCHED_ONLY_TIME="no"; fi]
+)
+if test "x$SCHED_ONLY_TIME" = "xyes" ; then 
+	AC_DEFINE(TIME_METRIC, 1, set to use the time-triggered GC )
+	AC_DEFINE(GC_ONLY_TIME, 1, set to use only time and no work metric )
+fi
+
+
+AC_ARG_ENABLE(gc-adaptive-cycle-time,
+  AC_HELP_STRING(--enable-gc-adaptive-cycle-time, Set to use auto-tuning GC @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) AC_DEFINE(GC_CYCLE_TIME_ADAPTIVE, 1, set to use auto-tuning GC ) ;;
+    no)  ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gc-adaptive-cycle-time) ;;
+esac])
+
+AC_ARG_ENABLE(gc-measure-exectime,
+  AC_HELP_STRING(--enable-gc-measure-exectime, Set to measure C_GC @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) MEASURE_EXECTIME="yes"
+    ;;
+    no)  MEASURE_EXECTIME="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gc-measure-exectime) 
+    ;;
+esac],[if test "x$MEASURE_EXECTIME" = "x"; then MEASURE_EXECTIME="no"; fi]
+)
+if test "x$MEASURE_EXECTIME" = "xyes" ; then 
+	AC_DEFINE(MEASURE_CGC, 1, set to measure C_GC )
+fi
+
+AC_ARG_ENABLE(gc-measure-heapstate,
+  AC_HELP_STRING(--enable-gc-measure-heapstate, Set to measure S_h (Experimental, only works for MC) @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) MEASURE_HEAPSTATE="yes"
+    ;;
+    no)  MEASURE_HEAPSTATE="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gc-measure-heapstate) 
+    ;;
+esac],[if test "x$MEASURE_HEAPSTATE" = "x"; then MEASURE_HEAPSTATE="no"; fi]
+)
+if test "x$MEASURE_HEAPSTATE" = "xyes" ; then 
+	AC_DEFINE(GC_MEASURE_HEAPSTATE, 1, set to measure S_h )
+fi
+
+AC_ARG_ENABLE(gc-predict-cgc,
+  AC_HELP_STRING(--enable-gc-predict-cgc, Set to predict C_GC after mark phase (Experimental, only works for MC)@<:@NO@:>@),
+  [case "${enableval}" in
+    yes) PREDICT_C="yes"
+    ;;
+    no)  PREDICT_C="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gc-predict-cgc) 
+    ;;
+esac],[if test "x$PREDICT_C" = "x"; then PREDICT_C="no"; fi]
+)
+if test "x$PREDICT_C" = "xyes" ; then 
+	AC_DEFINE(GC_MEASURE_HEAPSTATE, 1, set to measure S_h )
+	AC_DEFINE(GC_PREDICT_C, 1, set to predict C_GC after mark phase )
+fi
+
+
+AC_ARG_ENABLE(lpmem,
+  AC_HELP_STRING(--enable-lpmem, Set to enable non-critical memory  @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) 
+      AC_DEFINE(LPMEM, 1, set to enable non-critical memory ) 
+dnl      AC_CHECK_LIB(m, ceil, IVM_LIBS="$IVM_LIBS -lm" LIBS="$LIBS -lm", 
+dnl                   AC_MSG_ERROR(ceil function not found in math library)) 
+    ;;
+    no)  ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-lpmem) ;;
+esac])
+
+AC_ARG_ENABLE(gc-time-measurements,
+  AC_HELP_STRING(--enable-gc-time-measurements, set to enable GC time measurements  @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) AC_DEFINE(TIME_MEASUREMENTS, 1, set to enable GC time measurements ) ;;
+    no)  ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-gc-time-measurements) ;;
+esac])
+
+dnl **********************************************************************
+dnl ** Selection of which packages (containing native code) we should    *
+dnl ** include in the build. Normally, it is safe to include everything  *
+dnl ** as only the classes actually referenced in the Java code are      *
+dnl ** included (based on whether a class index is defined in indices.h) *
+dnl ** Thus, the default is yes. The options are here to make it possible*
+dnl ** to build the system for platforms where the packages are missing  *
+dnl ** completely (which should really never be the case).               *
+dnl **********************************************************************
+
+dnl ------------------------------------------------------------
+dnl Should we include (native implementations for) java_lang_Math
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(java-lang-math,
+  AC_HELP_STRING(--enable-java-lang-math, Set if java.lang.Math should be used @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) JAVA_LANG_MATH="yes"
+    ;;
+    no)  JAVA_LANG_MATH="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-java-lang-math) 
+    ;;
+esac],[JAVA_LANG_MATH="yes"]
+)
+AM_CONDITIONAL(ENABLE_JAVA_LANG_MATH, test "x$JAVA_LANG_MATH" = "xyes")
+
+dnl ------------------------------------------------------------
+dnl Should we include (native implementations for) se_lth_cs_realtime
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(se-lth-cs-realtime,
+  AC_HELP_STRING(--enable-se-lth-cs-realtime, Set if se.lth.cs.realtime should be used @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) SE_LTH_CS_REALTIME="yes"
+    ;;
+    no)  SE_LTH_CS_REALTIME="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-se-lth-cs-realtime) 
+    ;;
+esac],[SE_LTH_CS_REALTIME="yes"]
+)
+AM_CONDITIONAL(ENABLE_SE_LTH_CS_REALTIME, test "x$SE_LTH_CS_REALTIME" = "xyes")
+dnl ------------------------------------------------------------
+dnl Should we include (native implementations for) se_lth_cs_robot
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(se-lth-cs-robot,
+  AC_HELP_STRING(--enable-se-lth-cs-robot, Set if se.lth.cs.robot should be used @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) SE_LTH_CS_ROBOT="yes"
+    ;;
+    no)  SE_LTH_CS_ROBOT="no"
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-se-lth-cs-robot) 
+    ;;
+esac],[SE_LTH_CS_ROBOT="yes"]
+)
+AM_CONDITIONAL(ENABLE_SE_LTH_CS_ROBOT, test "x$SE_LTH_CS_ROBOT" = "xyes")
+dnl ------------------------------------------------------------
+dnl Should we include (native implementations for) se.lth.cs.util.linux
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(util-linux,
+  AC_HELP_STRING(--enable-util-linux, Set if se.lth.cs.util.linux should be used @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) UTIL_LINUX="yes"
+    ;;
+    no) UTIL_LINUX="no" 
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-util-linux) 
+    ;;
+esac],[UTIL_LINUX="yes"]
+)
+AM_CONDITIONAL(ENABLE_UTIL_LINUX, test "x$UTIL_LINUX" = "xyes")
+
+dnl ------------------------------------------------------------
+dnl Default priority for Java threads, requires threads
+dnl ------------------------------------------------------------
+AC_ARG_WITH(normal_priority_java,
+  [  --with-normal_priority_java=value  Normal priority for Java threads (0 - 10) @<:@5@:>@],
+  [case "${withval}" in
+    changequote(<<, <<)dnl 
+    *[0-9]) _RT_NORMAL_PR_JAVA=$withval ;;
+    +[0-9]\*+[0-9]) _RT_NORMAL_PR_JAVA=$withval ;;
+    changequote([, ])dnl 
+    *) AC_MSG_ERROR(bad value ${withval} for --with-heapsize) ;;
+   esac], [_RT_NORMAL_PR_JAVA=5])
+AC_DEFINE_UNQUOTED(_RT_NORMAL_PR_JAVA, ($_RT_NORMAL_PR_JAVA), Normal Java thread priority)
+dnl J2C_DEFS="$J2C_DEFS -D_RT_NORMAL_PR_JAVA=$_RT_NORMAL_PR_JAVA"
+
+dnl ------------------------------------------------------------
+dnl RT Scheduling policy for posix, requires threads
+dnl ------------------------------------------------------------
+AC_ARG_WITH(rt_scheduling_posix,
+  [  --with-rt_scheduling_posix=value  RT scheduling policy for Java threads (0 - 2) @<:@2@:>@],
+  [case "${withval}" in
+    changequote(<<, <<)dnl 
+    *[0-9]) _RT_SCHEDULING_POSIX=$withval ;;
+    +[0-9]\*+[0-9]) _RT_SCHEDULING_POSIX=$withval ;;
+    changequote([, ])dnl 
+    *) AC_MSG_ERROR(bad value ${withval} for --with-heapsize) ;;
+   esac], [_RT_SCHEDULING_POSIX=2])
+AC_DEFINE_UNQUOTED(_RT_SCHEDULING_POSIX, ($_RT_SCHEDULING_POSIX), RT Scheduling policy)
+dnl J2C_DEFS="$J2C_DEFS -D_RT_SCHEDULING_POSIX=$_RT_SCHEDULING_POSIX"
+
+dnl ------------------------------------------------------------
+dnl Should we enable AVR extended memory
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(avr-extended-memory,
+  AC_HELP_STRING(--enable-avr-extended-memory, Set if you have extended memory available for AVR @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) AVR_EXT_MEM="yes"
+    ;;
+    no) AVR_EXT_MEM="no" 
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-avr-extended-memory) 
+    ;;
+esac],[AVR_EXT_MEM="yes"]
+)
+if test "x$AVR_EXT_MEM" = "xyes" ; then 
+	AC_DEFINE(_AVR_EXT_MEM, 1, Set to enable AVR external memory) 
+fi
+
+dnl ------------------------------------------------------------
+dnl Should we enable external clock ticks for AVR
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(avr-external-clock,
+  AC_HELP_STRING(--enable-avr-external-clock, Set if external clock ticks should be used for AVR @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) AVR_EXT_CLOCK="yes"
+    ;;
+    no) AVR_EXT_CLOCK="no" 
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-avr-external-clock) 
+    ;;
+esac],[AVR_EXT_CLOCK="no"]
+)
+if test "x$AVR_EXT_CLOCK" = "xyes" ; then 
+	AC_DEFINE(_AVR_EXT_CLOCK, 1, Set to enable AVR external clock) 
+fi
+
+dnl ------------------------------------------------------------
+dnl Should we enable the UART for AVR
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(avr-uart,
+  AC_HELP_STRING(--enable-avr-uart, Set if using a UART with the AVR @<:@NO@:>@),
+  [case "${enableval}" in
+    yes) AVR_UART="yes"
+    ;;
+    no) AVR_UART="no" 
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-avr-uart) 
+    ;;
+esac],[AVR_UART="no"]
+)
+if test "x$AVR_UART" = "xyes" ; then 
+	AC_DEFINE(_AVR_UART, 1, Set to enable UART in the AVR) 
+fi
+
+dnl ------------------------------------------------------------
+dnl Should we enable Dead code elimination.
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(deadcode-elimination,
+  AC_HELP_STRING(--enable-deadcode-elimination, Set for using dead code elimination in Java2C. Can be dangerous @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) DEAD_CODE="yes"
+    ;;
+    no) DEAD_CODE="no" 
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-deadcode-elimination) 
+    ;;
+esac],[DEAD_CODE="yes"]
+)
+if test "x$DEAD_CODE" = "xyes" ; then 
+	J2C_JAVA2CFLAGS="$J2C_JAVA2CFLAGS --deadcode-elim"
+fi
+
+dnl ------------------------------------------------------------
+dnl Should we enable use of Class obejcts and reflection.
+dnl ------------------------------------------------------------
+AC_ARG_ENABLE(reflection,
+  AC_HELP_STRING(--enable-reflection, Set for using reflection in
+  Java2C compiled code. Can be dangerous and should probably be switched off in small systems @<:@YES@:>@),
+  [case "${enableval}" in
+    yes) REFLECTION="yes"
+    ;;
+    no) REFLECTION="no" 
+    ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-reflection) 
+    ;;
+esac],[REFLECTION="yes"]
+)
+if test "x$REFLECTION" = "xyes" ; then 
+	J2C_JAVA2CFLAGS="$J2C_JAVA2CFLAGS --with-reflection"
+	AC_DEFINE(HAS_REFLECTION, 1, Set to turn on reflection) 
+else
+	AC_DEFINE(HAS_REFLECTION, 0, Set to turn on reflection) 
+fi
+
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+dnl The FLAGS option.
+dnl ------------------------------------------------------------
+dnl ------------------------------------------------------------
+dnl TODO: What other flags needs to go here?
+dnl FLAGS="$FLAGS "
+
+
+J2C_CPPFLAGS="$J2C_CPPFLAGS $FLAGS"
+dnl ------------------------------------------------------------
+dnl Includes
+dnl ------------------------------------------------------------
+dnl Note: The use of top_srcdir/src is pretty weird, but ensures
+dnl that when building in the subdirs and in other builddirs, the 
+dnl include files in these directories can be accessed.
+dnl TODO: Should I move this closer to the options?
+
+dnl J2C_CPPFLAGS="$J2C_CPPFLAGS -I\$(top_srcdir)/$GC_DIR"
+dnl J2C_CPPFLAGS="$J2C_CPPFLAGS -I\$(top_srcdir)/../../../javalib/include"
+dnl J2C_CPPFLAGS="$J2C_CPPFLAGS -I\$(top_srcdir)/../../../javalib/native/$THREAD"
+dnl attempt to remove the (top_srcdir) dependencies in the standard paths
+J2C_CPPFLAGS="$J2C_CPPFLAGS -I\$(J2C_HOME)/gc"
+J2C_CPPFLAGS="$J2C_CPPFLAGS -I\$(J2C_HOME)/javalib/include"
+J2C_CPPFLAGS="$J2C_CPPFLAGS -I\$(J2C_HOME)/javalib/native/$THREAD"
+
+dnl ------------------------------------------------------------
+dnl Checks for programs used during the compilation process
+dnl Should we check for the linker as well? 
+dnl ------------------------------------------------------------
+AC_PROG_CC
+AC_PROG_CPP
+
+CCLD=$CC
+AC_SUBST(CCLD)
+
+dnl We need to check for ranlib - on platforms that does not support
+dnl this, we probably need to move to libtool
+AC_CHECK_TOOL(RANLIB, ranlib)
+dnl And a AR check
+AC_CHECK_TOOL(AR, ar)
+
+dnl ------------------------------------------------------------
+dnl Checks for libraries.
+dnl ------------------------------------------------------------
+dnl Check for the math lib - I assume this is used for all platforms
+dnl AC_CHECK_LIB(m, main)
+
+dnl NOTE: Some of these checks are only used with certain ports. 
+dnl NOTE: I can not check this currenlty, since I only have access to Linux.
+
+dnl Replace `main' with a function in -lc:
+dnl stork?: AC_CHECK_LIB(c, main)
+dnl Replace `main' with a function in -lgcc:
+dnl stork?: AC_CHECK_LIB(gcc, main)
+dnl Replace `main' with a function in -lmodula:
+dnl stork?: AC_CHECK_LIB(modula, main)
+
+dnl Replace `main' with a function in -lnsl:
+dnl Sparc?: AC_CHECK_LIB(nsl, main)
+dnl Replace `main' with a function in -lsocket:
+dnl Sparc?: AC_CHECK_LIB(socket, main)
+
+dnl Replace `main' with a function in -lmatcomm:
+dnl Used for a certain IPC?: AC_CHECK_LIB(matcomm, main)
+
+dnl ------------------------------------------------------------
+dnl Checks for header files.
+dnl ------------------------------------------------------------
+AC_HEADER_STDC
+dnl AC_CHECK_HEADERS(fcntl.h strings.h sys/time.h unistd.h)
+
+dnl ------------------------------------------------------------
+dnl Checks for typedefs, structures, and compiler characteristics.
+dnl ------------------------------------------------------------
+AC_C_CONST
+
+dnl ------------------------------------------------------------
+dnl Checks for library functions.
+dnl ------------------------------------------------------------
+dnl May break for crosscompile
+dnl AC_FUNC_VPRINTF
+dnl AC_CHECK_FUNCS(select strdup)
+
+dnl ------------------------------------------------------------
+dnl Set the flags for the compilation process
+dnl ------------------------------------------------------------
+CFLAGS="$J2C_CFLAGS -g"
+CPPFLAGS="$J2C_CPPFLAGS -w $J2C_DEFS"
+#DEFS="$J2C_DEFS"
+LIBS="$J2C_LIBS -lm"
+LDFLAGS="$J2C_LDFLAGS"
+
+dnl ------------------------------------------------------------
+dnl Do substitutions
+dnl ------------------------------------------------------------
+
+AC_SUBST(J2C_JAVA2CFLAGS)
+AC_SUBST(HOST_ARCH)
+dnl ------------------------------------------------------------
+dnl Output
+dnl ------------------------------------------------------------
+AC_OUTPUT(Makefile)
